@@ -45,6 +45,32 @@ func main() {
 	}
 	log.Printf("Connect response: %s\n", message)
 
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	go func() {
+		for {
+			select {
+			case <-ticker.C:
+				_, message, err := c.ReadMessage()
+				if err != nil {
+					log.Println("read:", err)
+					return
+				}
+				if strings.Contains(string(message), `"type":1`) {
+					log.Printf("\nReceived broadcast: %sEnter JSON to send: ", message)
+				} else {
+					err := c.WriteMessage(websocket.TextMessage, message)
+					if err != nil {
+						log.Println("write:", err)
+						return
+					}
+				}
+
+			}
+		}
+	}()
+
 	for {
 		fmt.Print("Enter JSON to send: ")
 		json, _ := reader.ReadString('\n')
@@ -64,30 +90,4 @@ func main() {
 		}
 		log.Printf("Received response: %s\n", message)
 	}
-
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	go func() {
-		for {
-			select {
-			case <-ticker.C:
-				_, message, err := c.ReadMessage()
-				if err != nil {
-					log.Println("read:", err)
-					return
-				}
-				if strings.Contains(string(message), `"type":1`) {
-					log.Printf("Received broadcast: %s", message)
-				} else {
-					err := c.WriteMessage(websocket.TextMessage, message)
-					if err != nil {
-						log.Println("write:", err)
-						return
-					}
-				}
-
-			}
-		}
-	}()
 }
