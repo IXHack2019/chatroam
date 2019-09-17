@@ -86,7 +86,6 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			}
 
 			client.handleConnect(message.Data)
-			// TODO: Generate username here
 			ws.WriteJSON(RegistrationResponse{getRandomName()})
 
 		} else if message.Type == TypeSend {
