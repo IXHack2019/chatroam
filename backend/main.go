@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+	"time"
 
 	// "log"
 	// "math/rand"
@@ -59,9 +60,17 @@ var connectedClients = make(map[string]*Client)
 var rooms []*Room
 
 func main() {
+	//TODO: fix reset not putting users in a new room
+	//go scheduler(time.NewTicker(time.Second * 5))
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
 	log.Fatal(http.ListenAndServe("localhost:8888", nil))
+}
+
+func scheduler(tick *time.Ticker) {
+	for range tick.C {
+		resetRooms()
+	}
 }
 
 func handleMessage(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +97,6 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 		if message.Type == TypeConnect {
 			client := Client{
 				socket: ws,
-				
 			}
 
 			client.handleConnect(message.Data)
@@ -129,24 +137,10 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		return
 	}
 
-	for _, room := range rooms {
-		if len(room.members) < maxGroupSize { //TODO race condition here lul
-			room.members = append(room.members, client)
-			client.room = room
-			break
-		}
-	}
+	getRoomForClient(client)
 
-	if client.room == nil {
-		newRoom := &Room{
-			members: []*Client{client},
-		}
-		rooms = append(rooms, newRoom)
-		client.room = newRoom
-	}
-	client.DeviceId = connect.DeviceId
 	connectedClients[connect.DeviceId] = client
-	
+
 }
 
 // func handleSend(client *Client, data json.RawMessage) {

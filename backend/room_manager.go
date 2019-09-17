@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"sync"
 	"time"
 )
@@ -10,7 +11,7 @@ var pool = &sync.Pool{
 	New: func() interface{} {
 		newRoom := &Room{
 			members: []*Client{},
-			expiry:  time.Now().UnixNano() / int64(time.Millisecond),
+			expiry:  time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1,
 		}
 		rooms = append(rooms, newRoom)
 		return newRoom
@@ -29,6 +30,8 @@ func getRoomForClient(client *Client) {
 	if len(room.members) < maxGroupSize {
 		pool.Put(room)
 	}
+
+	printRooms()
 
 }
 
@@ -55,6 +58,8 @@ func freeClient(client *Client) bool {
 	}
 	mutex.Unlock()
 
+	printRooms()
+
 	return success
 }
 
@@ -66,15 +71,26 @@ func resetRooms() {
 		curr := time.Now().UnixNano() / int64(time.Millisecond)
 		if curr > room.expiry {
 			//room is expired - reset it
+			room.members = room.members[:0]
 			for _, clientInRoom := range room.members {
 				// get a new room for the client
-				clientInRoom.room = nil
 				getRoomForClient(clientInRoom)
 			}
-			room.members = room.members[:0]
 			room.expiry = time.Now().UnixNano() / int64(time.Millisecond)
 		}
 		mutex.Unlock()
 	}
+
+	printRooms()
+}
+
+//for testing purposes - print status of each room
+func printRooms() {
+
+	fmt.Println("-------")
+	for i, room := range rooms {
+		fmt.Printf("%d people in room %d\n", len(room.members), i)
+	}
+	fmt.Println("-------")
 
 }
