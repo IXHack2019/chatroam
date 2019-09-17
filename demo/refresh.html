@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>Circles</title>
+  <style>
+    /* Always set the map height explicitly to define the size of the div
+    * element that contains the map. */
+    #map {
+      height: 100%;
+    }
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+  // This example creates circles on the map, representing populations in North
+  // America.
+  var idToColor = {}
+  var presentColor = []
+  function getIcon(color) {
+    return {
+      path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z M -2,-30 a 2,2 0 1,1 4,0 2,2 0 1,1 -4,0',
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: '#000',
+      strokeWeight: 2,
+      scale: 1,
+    };
+  }
+  function getColor(groupId) {
+          if (groupId in idToColor) {
+              return idToColor[groupId];
+      }
+      else {
+              var maxIteration = 100;
+              for (var i = 0; i < maxIteration; i ++) {
+                  var color = getRandomColor();
+              if (!(color in presentColor)) {
+                      presentColor.push(color);
+                  idToColor[groupId] = color;
+                  return color;
+              }
+          }
+          // TODO: figure out what if no color could be matched
+          return "#FFFFFF";
+      }
+  }
+  function getRandomColor() {
+      var letters = '0123456789ABCDEF';
+      var color = '#';
+      for (var i = 0; i < 6; i++) {  function getColor(groupId) {
+          if (groupId in idToColor) {
+              return idToColor[groupId];
+      }
+      else {
+              var maxIteration = 100;
+              for (var i = 0; i < maxIteration; i ++) {
+                  var color = getRandomColor();
+              if (!(color in presentColor)) {
+                  presentColor.push(color);
+                  idToColor[groupId] = color;
+                  return color;
+              }
+          }
+          // TODO: figure out what if no color could be matched
+          return "#FFFFFF";
+      }
+  }
+  function getRandomColor() {
+      var letters = '0123456789ABCDEF';
+      var color = '#';
+      for (var i = 0; i < 6; i++) {
+          color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+  }
+          color += letters[Math.floor(Math.random() * 16)];
+      }
+      return color;
+  }
+  // First, create an object containing LatLng and population for each city.
+      var users = [{
+								name: "Matt Lewis",
+								lat: 43.652375,
+								lon: -79.376576,
+								roomID: 1,
+								lastMsg: "This app is siiiick! YEET!"
+				},{
+								name: "Charles Black",
+								lat: 43.652238,
+								lon: -79.380588,
+								roomID: 2,
+								lastMsg: "Go Redskins!!!"
+				},{
+								name: "Frank Castle",
+								lat: 43.652112,
+								lon: -79.380688,
+								roomID: 3,
+								lastMsg: "It's time for punishment"
+				},{
+								name: "George Foreman",
+								lat: 43.652438,
+								lon: -79.380388,
+								roomID: 4,
+								lastMsg: "Cook a steak in 5 minutes!"
+				},{
+								name: "Gloria Raynor",
+								lat: 43.651238,
+								lon: -79.381588,
+								roomID: 5,
+								lastMsg: "Respect!"
+				},{
+								name: "Marie Curie",
+								lat: 43.651438,
+								lon: -79.381288,
+								roomID: 6,
+								lastMsg: "Yeah! Science!"
+				},{
+								name: "Johan Strutt",
+								lat: 43.653238,
+								lon: -79.384588,
+								roomID: 7,
+								lastMsg: "Howdy There"
+				},{
+								name: "Julio Jones",
+								lat: 43.653238,
+								lon: -79.382588,
+								roomID: 8,
+								lastMsg: "Matty Ice hit me up in the end zone!"
+				},{
+								name: "Adrian Peterson",
+								lat: 43.652510,
+								lon: -79.390468,
+								roomID: 8,
+								lastMsg: "Wow. An orange peanut? For me? Wow"
+				},{
+								name: "Tedd George",
+								lat: 43.649161,
+								lon: -79.375986,
+								roomID: 9,
+								lastMsg: "Anyone interested in grabbing some dim sum?"
+				},{
+								name: "Lucy Diamond",
+								lat: 43.655029,
+								lon: -79.370690,
+								roomID: 1,
+								lastMsg: "Looking for someone to go shopping with!!!"
+				},{
+								name: "Emilio Vasquez",
+								lat: 43.657715,
+								lon: -79.376414,
+								roomID: 2,
+								lastMsg: "I just saw Brad Pitt at TIFF!!!"
+				}];
+
+  // setInterval(initMap, 5000);
+  // setTimeout(function() {
+  //   location.reload();
+  // }, 10000);
+
+  function initMap() {
+    // Create the map.
+    var map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 16,
+      center: {lat: 43.653, lng: -79.383},
+      mapTypeId: 'terrain'
+    });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        map.setCenter({lat: position.coords.latitude, lng: position.coords.longitude});
+      }, function() {
+        handleLocationError(true, infoWindow, map.getCenter());
+      });
+    }
+
+    // Construct the circle for each value in citymap.
+    // Note: We scale the area of the circle based on the population.
+    for (var user in users) {
+      //var idx = users[user].roomID % 8;
+      var marker = new google.maps.Marker({
+        icon: getIcon(getColor(users[user].roomID)),
+        position: { lat: users[user].lat, lng: users[user].lon},
+        map: map,
+        title: users[user].name
+      });
+      var infowindow = new google.maps.InfoWindow({
+        content: users[user].lastMsg
+      });
+      marker.addListener('mouseover', function() {
+        infowindow.open(map, this);
+      });
+    }
+  }
+  </script>
+  <script async defer
+  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZspwiS5iiIwwSsUT4ofXTG0uSv4-3VTI&callback=initMap">
+  </script>
+</body>
+</html>
