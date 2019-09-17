@@ -3,38 +3,128 @@ package main
 import (
         "log"
         "net/http"
+		"encoding/json"
+		"log"
+		"math/rand"
 
         "github.com/gorilla/websocket"
 )
 
-var clients = make(map[*websocket.Conn]bool) // connected clients
-var broadcast = make(chan Message)           // broadcast channel
+type Room struct {
+	memberSockets  []*websocket.Conn
+}
+var roomAssignments = make(map[string]string)
+
+var rooms []*Room
 
 // Configure the upgrader
 var upgrader = websocket.Upgrader{}
 
+
+const (
+	TypeConnect = iota
+	TypeSend
+	TypeReceive 
+)
+
+const maxGroupSize = 3
 // Define our message object
 type Message struct {
-	Email    string `json:"email"`
+	Type int          `json:"type"`
+	Data json.RawMessage `json:"data"`
+}
+type Connect struct {
+	DeviceId string `json:"deviceId"`
+}
+
+type Send struct {
+	Msg string `json:"msg"`
+}
+
+type Receive struct {
+	Msg string `json:"msg"`
 	Username string `json:"username"`
-	Message  string `json:"message"`
+}
+
+type User struct {
+	DeviceId string
+	Username string
+}
+
+type Client struct {
+	socket *websocket.Conn
+	room *Room
 }
 
 func main() {
-	// Create a simple file server
-	fs := http.FileServer(http.Dir("../public"))
-	http.Handle("/", fs)
-	// Configure websocket route
-	http.HandleFunc("/ws", handleConnections)
+	log.SetFlags(log.LstdFlags)
+	http.HandleFunc("/connect", handleMessage)
+	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+}
 
-	// Start listening for incoming chat messages
-	go handleMessages()
-	// Start the server on localhost port 8000 and log any errors
-	log.Println("http server started on :8000")
-	err := http.ListenAndServe(":8000", nil)
+func handleMessage(w http.ResponseWriter, r *http.Request) {
+	// Upgrade initial GET request to a websocket
+	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-			log.Fatal("ListenAndServe: ", err)
+		log.Fatal(err)
 	}
+	// Make sure we close the connection when the function returns
+	defer ws.Close()
+
+	for {
+
+		_, request, err := ws.ReadMessage()
+		if err != nil {
+			log.Println("read:", err)
+			return
+		}
+
+		var message Message
+		err = json.Unmarshal(request, &message)
+		if err != nil {
+			log.Printf("Error unmarshalling message: %s", err)
+			continue
+		}
+
+		log.Printf("Parsed message: %s", message)
+
+		if message.Type == TypeConnect {
+
+			handleConnect(message.Data)
+
+		} else if message.Type == TypeSend {
+
+		} else if message.Type == TypeReceive {
+
+
+		}
+
+
+	}
+
+}
+
+func (client *Client) handleConnect(data json.RawMessage) {
+	var connect Connect
+	err := json.Unmarshal(data, &connect)
+	if err != nil {
+		log.Printf("Error unmarshalling host connect: %s", err)
+		return
+	}
+
+	numRooms := len(rooms)
+	if numRooms == 0 {
+		rooms = append(rooms, &Room{
+			participants: []*websocket.Conn{client.socket},
+		})
+	}
+	for i, room := range rooms {
+		if (len(room.participants) < maxGroupSize) { //TODO race condition here lul
+			room.memberSocket = append(room.memberSocket, client.socket)
+		}
+	} 
+	connect.DeviceId
+
 }
 func handleConnections(w http.ResponseWriter, r *http.Request) {
 	// Upgrade initial GET request to a websocket
