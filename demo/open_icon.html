@@ -119,25 +119,25 @@
 								lat: 43.652510,
 								lon: -79.390468,
 								roomID: 8,
-								lastMsg: "Matty Ice hit me up in the end zone!"
+								lastMsg: "Wow. An orange peanut? For me? Wow"
 				},{
-								name: "Adrian Peterson",
+								name: "Tedd George",
 								lat: 43.649161,
 								lon: -79.375986,
 								roomID: 9,
-								lastMsg: "Matty Ice hit me up in the end zone!"
+								lastMsg: "Anyone interested in grabbing some dim sum?"
 				},{
-								name: "Adrian Peterson",
+								name: "Lucy Diamond",
 								lat: 43.655029,
 								lon: -79.370690,
 								roomID: 1,
-								lastMsg: "Matty Ice hit me up in the end zone!"
+								lastMsg: "Looking for someone to go shopping with!!!"
 				},{
-								name: "Adrian Peterson",
+								name: "Emilio Vasquez",
 								lat: 43.657715,
 								lon: -79.376414,
 								roomID: 2,
-								lastMsg: "Matty Ice hit me up in the end zone!"
+								lastMsg: "I just saw Brad Pitt at TIFF!!!"
 				}];
 
       function initMap() {
@@ -160,6 +160,7 @@
 					  icon: getIcon(getColor(users[user].roomID)),
 						position: { lat: users[user].lat, lng: users[user].lon},
 						map: map,
+						animation: google.maps.Animation.DROP,
 						info: users[user].lastMsg,
 						title: users[user].name
 					});
