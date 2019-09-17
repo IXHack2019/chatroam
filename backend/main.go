@@ -78,7 +78,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		log.Printf("Parsed message: %s", message.Data)
+		log.Printf("Parsed message: %s type: %d", message.Data, message.Type)
 
 		if message.Type == TypeConnect {
 			client := Client{
@@ -89,6 +89,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			ws.WriteJSON(RegistrationResponse{getRandomName()})
 
 		} else if message.Type == TypeSend {
+			log.Printf("TypeSend\n")
 
 			var receivedMessage ReceivedMessage
 			err := json.Unmarshal(message.Data, &receivedMessage)
@@ -96,11 +97,15 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Error unmarshalling host connect: %s", err)
 				return
 			}
+			log.Printf("101\n")
+			log.Println(receivedMessage.DeviceId)
 
 			client := connectedClients[receivedMessage.DeviceId]
 			room := client.room
 
 			for _, member := range room.members {
+				log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
+
 				member.socket.WriteJSON(receivedMessage)
 			}
 
@@ -133,7 +138,9 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	}
 
 	connectedClients[connect.DeviceId] = client
-
+	log.Println("140:")
+	log.Println(connectedClients[connect.DeviceId])
+	
 }
 
 // func handleSend(client *Client, data json.RawMessage) {
