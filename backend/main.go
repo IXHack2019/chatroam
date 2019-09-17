@@ -88,6 +88,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 		if message.Type == TypeConnect {
 			client := Client{
 				socket: ws,
+				
 			}
 
 			client.handleConnect(message.Data)
@@ -109,6 +110,8 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			room := client.room
 
 			for _, member := range room.members {
+
+				log.Printf("%+v\n", member)
 				log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
 
 				member.socket.WriteJSON(message)
@@ -141,11 +144,9 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		rooms = append(rooms, newRoom)
 		client.room = newRoom
 	}
-
+	client.DeviceId = connect.DeviceId
 	connectedClients[connect.DeviceId] = client
-	log.Println("140:")
-	log.Println(connectedClients[connect.DeviceId])
-
+	
 }
 
 // func handleSend(client *Client, data json.RawMessage) {
