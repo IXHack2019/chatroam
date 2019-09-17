@@ -84,24 +84,42 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 	// Make sure we close the connection when the function returns
 	defer ws.Close()
 
+	var client *Client
+	defer func() {
+		log.Printf("Removing client %s from room", client.DeviceId)
+
+		if client != nil {
+			delete(connectedClients, client.DeviceId)
+		}
+
+		var newMembers []*Client
+		for _, roomClient := range client.room.members {
+			if roomClient != client {
+				newMembers = append(newMembers, roomClient)
+			}
+		}
+		client.room.members = newMembers
+	}()
+
 	for {
 		var message Message
 		err = ws.ReadJSON(&message)
 		if err != nil {
-			log.Printf("Error unmarshalling message: %s", err)
-			continue
+			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
+				log.Printf("Error unmarshalling message: %s", err)
+			}
+			return
 		}
 
 		log.Printf("Parsed message: %s type: %d", message.Data, message.Type)
 
 		if message.Type == TypeConnect {
-			client := Client{
+			client = &Client{
 				socket: ws,
 			}
 
 			client.handleConnect(message.Data)
 			ws.WriteJSON(RegistrationResponse{getRandomName()})
-
 		} else if message.Type == TypeSend {
 			log.Printf("TypeSend\n")
 
@@ -139,8 +157,8 @@ func (client *Client) handleConnect(data json.RawMessage) {
 
 	getRoomForClient(client)
 
+	client.DeviceId = connect.DeviceId
 	connectedClients[connect.DeviceId] = client
-
 }
 
 // func handleSend(client *Client, data json.RawMessage) {
