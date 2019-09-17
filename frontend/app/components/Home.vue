@@ -1,28 +1,25 @@
 <template>
-    <Page class="page">
-        <ActionBar class="action-bar">
-            <Label class="action-bar-title" text="Home"></Label>
-        </ActionBar>
-
-        <GridLayout>
-            <Label class="info" horizontalAlignment="center" verticalAlignment="center">
-                <FormattedString>
-                    <Span class="fa" text.decode="&#xf135; "/>
-                    <Span :text="message"/>
-                </FormattedString>
-            </Label>
+    <Page class="page" actionBarHidden="true">
+        <GridLayout height="100%" width="100%">
+            <Board height="90%" verticalAlignment="top"/>
+            <Input height="10%" verticalAlignment="bottom"/>
         </GridLayout>
     </Page>
 </template>
 
 <script>
+    import Board from "./Board";
+    import Input from './Input';
+    require('nativescript-websockets');
     export default {
-        computed: {
-            message() {
-                return "Blank {N}-Vue app";
-            }
+        components: {
+            Board, Input
         }
     };
+    var mySocket = new WebSocket("ws://localhost:8080");
+    mySocket.on('open', function(socket) {
+        console.log("connected!");
+    })
 </script>
 
 <style scoped lang="scss">
