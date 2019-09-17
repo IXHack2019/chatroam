@@ -4,14 +4,13 @@ let ws;
 $(document).ready(function() {
    ws = new WebSocket("ws://localhost:8888/connect");
    ws.onopen = function (evt) {
-   var request = {
-      "type": 0,
-      "data": {
-         "deviceID": localuser
+      var request = {
+         "type": 0,
+         "data": {
+            "deviceID": localuser
+         }
       }
-   }
-   console.log("SEND: " + JSON.stringify(request));
-      ws.send(JSON.stringify(request));
+      sendRequestWithPosition(request);
    }
    ws.onclose = function (evt) {
       ws = null;
@@ -33,6 +32,24 @@ $(document).ready(function() {
       }
    });
 });
+
+function sendRequestWithPosition(request) {
+   getPosition()
+      .then(function(coords) {
+         request.data.lat = coords[0];
+         request.data.lng = coords[1];
+         console.log("SEND: " + JSON.stringify(request));
+         ws.send(JSON.stringify(request));
+      });
+}
+
+function getPosition() {
+   return new Promise(function(resolve, reject) {
+      navigator.geolocation.getCurrentPosition(function (position) {
+         resolve([position.coords.latitude, position.coords.longitude]);
+      });
+   });
+}
 
 function writeMessage(data, personal) {
    let html = "<span class='message bubble'>\
