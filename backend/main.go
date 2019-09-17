@@ -107,7 +107,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			for _, member := range room.members {
 				log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
 
-				member.socket.WriteJSON(receivedMessage)
+				member.socket.WriteJSON(message)
 			}
 
 		}
