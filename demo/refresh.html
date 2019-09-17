@@ -24,8 +24,7 @@
   <script>
   // This example creates circles on the map, representing populations in North
   // America.
-  var idToColor = {}
-  var presentColor = []
+  
   function getIcon(color) {
     return {
       path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z M -2,-30 a 2,2 0 1,1 4,0 2,2 0 1,1 -4,0',
@@ -162,12 +161,21 @@
 								lastMsg: "I just saw Brad Pitt at TIFF!!!"
 				}];
 
-  // setInterval(initMap, 5000);
+  // setInterval(initMap, 40000);
   // setTimeout(function() {
   //   location.reload();
   // }, 10000);
 
+  var idToColor = {};
+  var presentColor = [];
+  var openWindows = [];
+  var maxWindows = 3;
+
   function initMap() {
+
+    idToColor = {};
+    presentColor = [];
+    
     // Create the map.
     var map = new google.maps.Map(document.getElementById('map'), {
       zoom: 16,
@@ -187,17 +195,36 @@
     // Note: We scale the area of the circle based on the population.
     for (var user in users) {
       //var idx = users[user].roomID % 8;
+      // var marker = new google.maps.Marker({
+      //   icon: getIcon(getColor(users[user].roomID)),
+      //   position: { lat: users[user].lat, lng: users[user].lon},
+      //   map: map,
+      //   title: users[user].name
+      // });
+      // var infowindow = new google.maps.InfoWindow({
+      //   content: users[user].lastMsg
+      // });
+      // marker.addListener('mouseover', function() {
+      //   infowindow.open(map, this);
+      // });
+      var infowindow = new google.maps.InfoWindow();
+
       var marker = new google.maps.Marker({
         icon: getIcon(getColor(users[user].roomID)),
         position: { lat: users[user].lat, lng: users[user].lon},
         map: map,
+        animation: google.maps.Animation.DROP,
+        info: users[user].lastMsg,
         title: users[user].name
       });
-      var infowindow = new google.maps.InfoWindow({
-        content: users[user].lastMsg
-      });
+
       marker.addListener('mouseover', function() {
+        if (openWindows.length >= maxWindows) {
+          infowindow.close(map, openWindows.pop());
+        }
         infowindow.open(map, this);
+        openWindows.push(infowindow);
+        infowindow.setContent(this.info);
       });
     }
   }
