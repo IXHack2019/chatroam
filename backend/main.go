@@ -1,34 +1,32 @@
 package main
 
 import (
-        "log"
-        "net/http"
-		"encoding/json"
-		// "log"
-		// "math/rand"
+	"encoding/json"
+	"log"
+	"net/http"
+	// "log"
+	// "math/rand"
 
-        "github.com/gorilla/websocket"
+	"github.com/gorilla/websocket"
 )
 
 type Room struct {
-	members  []*Client
+	members []*Client
 }
 
 var rooms []*Room
 
-// Configure the upgrader
-var upgrader = websocket.Upgrader{}
-
 const (
 	TypeConnect = iota
 	TypeSend
-	TypeReceive 
+	TypeReceive
 )
 
 const maxGroupSize = 3
+
 // Define our message object
 type Message struct {
-	Type int          `json:"type"`
+	Type int             `json:"type"`
 	Data json.RawMessage `json:"data"`
 }
 type Connect struct {
@@ -40,14 +38,14 @@ type Send struct {
 }
 
 type Receive struct {
-	Msg string `json:"msg"`
+	Msg      string `json:"msg"`
 	Username string `json:"username"`
 }
 
 type Client struct {
-	socket *websocket.Conn 
-	room *Room
-	DeviceId string 
+	socket   *websocket.Conn
+	room     *Room
+	DeviceId string
 	Username string
 }
 
@@ -58,10 +56,13 @@ type Response struct {
 func main() {
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
-	log.Fatal(http.ListenAndServe("localhost:8080", nil))
+	log.Fatal(http.ListenAndServe("localhost:8888", nil))
 }
 
 func handleMessage(w http.ResponseWriter, r *http.Request) {
+	log.Printf("Received message\n")
+
+	upgrader := websocket.Upgrader{}
 	// Upgrade initial GET request to a websocket
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -78,26 +79,21 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		log.Printf("Parsed message: %s", message)
+		log.Printf("Parsed message: %v", message)
 
 		if message.Type == TypeConnect {
 			client := Client{
 				socket: ws,
-				
 			}
 
 			client.handleConnect(message.Data)
-
+			websocket.WriteJSON(ws, Response{Status: 0})
 		} else if message.Type == TypeSend {
 
 		} else if message.Type == TypeReceive {
 
-
 		}
-
-		websocket.WriteJSON(ws, Response{Status: 0})
 	}
-
 
 }
 
@@ -110,12 +106,12 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	}
 
 	for _, room := range rooms {
-		if (len(room.members) < maxGroupSize) { //TODO race condition here lul
+		if len(room.members) < maxGroupSize { //TODO race condition here lul
 			room.members = append(room.members, client)
 			client.room = room
 			break
 		}
-	} 
+	}
 
 	if client.room == nil {
 		newRoom := &Room{
@@ -124,8 +120,9 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		rooms = append(rooms, newRoom)
 		client.room = newRoom
 	}
-	
+
 }
+
 // func handleConnections(w http.ResponseWriter, r *http.Request) {
 // 	// Upgrade initial GET request to a websocket
 // 	ws, err := upgrader.Upgrade(w, r, nil)
