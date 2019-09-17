@@ -13,6 +13,7 @@ import (
 
 type Room struct {
 	members []*Client
+	expiry  int64
 }
 
 // Configure the upgrader
@@ -140,7 +141,7 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	connectedClients[connect.DeviceId] = client
 	log.Println("140:")
 	log.Println(connectedClients[connect.DeviceId])
-	
+
 }
 
 // func handleSend(client *Client, data json.RawMessage) {

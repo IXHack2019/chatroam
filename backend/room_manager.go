@@ -2,14 +2,18 @@ package main
 
 import (
 	"sync"
+	"time"
 )
 
 var pool = &sync.Pool{
 	// New creates an object when the pool has nothing available to return.
 	New: func() interface{} {
-		return &Room{
+		newRoom := &Room{
 			members: []*Client{},
+			expiry:  time.Now().UnixNano() / int64(time.Millisecond),
 		}
+		rooms = append(rooms, newRoom)
+		return newRoom
 	},
 }
 
@@ -52,4 +56,25 @@ func freeClient(client *Client) bool {
 	mutex.Unlock()
 
 	return success
+}
+
+// go through all rooms, vacate the expired rooms and put the clients into new rooms
+func resetRooms() {
+
+	for _, room := range rooms {
+		mutex.Lock()
+		curr := time.Now().UnixNano() / int64(time.Millisecond)
+		if curr > room.expiry {
+			//room is expired - reset it
+			for _, clientInRoom := range room.members {
+				// get a new room for the client
+				clientInRoom.room = nil
+				getRoomForClient(clientInRoom)
+			}
+			room.members = room.members[:0]
+			room.expiry = time.Now().UnixNano() / int64(time.Millisecond)
+		}
+		mutex.Unlock()
+	}
+
 }
