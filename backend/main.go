@@ -44,9 +44,6 @@ type Receive struct {
 	Username string `json:"username"`
 }
 
-type User struct {
-}
-
 type Client struct {
 	socket *websocket.Conn 
 	room *Room
@@ -55,7 +52,7 @@ type Client struct {
 }
 
 type Response struct {
-	status int `json:"status"`
+	Status int `json:"status"`
 }
 
 func main() {
@@ -98,7 +95,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 
 		}
 
-		websocket.WriteJSON(ws, Response{status: 0})
+		websocket.WriteJSON(ws, Response{Status: 0})
 	}
 
 
@@ -112,7 +109,6 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		return
 	}
 
-	
 	for _, room := range rooms {
 		if (len(room.members) < maxGroupSize) { //TODO race condition here lul
 			room.members = append(room.members, client)
