@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"net/http"
+
 	// "log"
 	// "math/rand"
 
@@ -35,7 +36,7 @@ type Connect struct {
 
 type ReceivedMessage struct {
 	DeviceId string `json:"deviceId"`
-	Msg string `json:"msg"`
+	Msg      string `json:"msg"`
 	Username string `json:"username"` // Problem: User may be able to change this with inspector
 }
 
@@ -44,8 +45,8 @@ type RegistrationResponse struct {
 }
 
 type Client struct {
-	socket *websocket.Conn 
-	room *Room
+	socket   *websocket.Conn
+	room     *Room
 	DeviceId string
 }
 
@@ -83,11 +84,10 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			client := Client{
 				socket: ws,
 			}
-			
+
 			client.handleConnect(message.Data)
 			// TODO: Generate username here
-			ws.WriteJSON(RegistrationResponse{"generatedUsername"})
-
+			ws.WriteJSON(RegistrationResponse{getRandomName()})
 
 		} else if message.Type == TypeSend {
 
@@ -132,14 +132,13 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		rooms = append(rooms, newRoom)
 		client.room = newRoom
 	}
-	
+
 	connectedClients[connect.DeviceId] = client
-	
+
 }
 
 // func handleSend(client *Client, data json.RawMessage) {
 
-	
 // }
 // func handleConnections(w http.ResponseWriter, r *http.Request) {
 // 	// Upgrade initial GET request to a websocket
