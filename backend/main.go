@@ -14,12 +14,12 @@ type Room struct {
 	members []*Client
 }
 
-var rooms []*Room
+// Configure the upgrader
+var upgrader = websocket.Upgrader{}
 
 const (
 	TypeConnect = iota
 	TypeSend
-	TypeReceive
 )
 
 const maxGroupSize = 3
@@ -33,25 +33,24 @@ type Connect struct {
 	DeviceId string `json:"deviceId"`
 }
 
-type Send struct {
+type ReceivedMessage struct {
+	DeviceId string `json:"deviceId"`
 	Msg string `json:"msg"`
+	Username string `json:"username"` // Problem: User may be able to change this with inspector
 }
 
-type Receive struct {
-	Msg      string `json:"msg"`
+type RegistrationResponse struct {
 	Username string `json:"username"`
 }
 
 type Client struct {
-	socket   *websocket.Conn
-	room     *Room
+	socket *websocket.Conn 
+	room *Room
 	DeviceId string
-	Username string
 }
 
-type Response struct {
-	Status int `json:"status"`
-}
+var connectedClients = make(map[string]*Client)
+var rooms []*Room
 
 func main() {
 	log.SetFlags(log.LstdFlags)
@@ -62,7 +61,6 @@ func main() {
 func handleMessage(w http.ResponseWriter, r *http.Request) {
 	log.Printf("Received message\n")
 
-	upgrader := websocket.Upgrader{}
 	// Upgrade initial GET request to a websocket
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -79,22 +77,36 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 
-		log.Printf("Parsed message: %v", message)
+		log.Printf("Parsed message: %s", message.Data)
 
 		if message.Type == TypeConnect {
 			client := Client{
 				socket: ws,
 			}
-
+			
 			client.handleConnect(message.Data)
-			websocket.WriteJSON(ws, Response{Status: 0})
+			// TODO: Generate username here
+			ws.WriteJSON(RegistrationResponse{"generatedUsername"})
+
+
 		} else if message.Type == TypeSend {
 
-		} else if message.Type == TypeReceive {
+			var receivedMessage ReceivedMessage
+			err := json.Unmarshal(message.Data, &receivedMessage)
+			if err != nil {
+				log.Printf("Error unmarshalling host connect: %s", err)
+				return
+			}
+
+			client := connectedClients[receivedMessage.DeviceId]
+			room := client.room
+
+			for _, member := range room.members {
+				member.socket.WriteJSON(receivedMessage)
+			}
 
 		}
 	}
-
 }
 
 func (client *Client) handleConnect(data json.RawMessage) {
@@ -120,9 +132,15 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		rooms = append(rooms, newRoom)
 		client.room = newRoom
 	}
-
+	
+	connectedClients[connect.DeviceId] = client
+	
 }
 
+// func handleSend(client *Client, data json.RawMessage) {
+
+	
+// }
 // func handleConnections(w http.ResponseWriter, r *http.Request) {
 // 	// Upgrade initial GET request to a websocket
 // 	ws, err := upgrader.Upgrade(w, r, nil)
