@@ -29,7 +29,7 @@
     let ws;
   
     $(document).ready(function() {
-      ws = new WebSocket("ws://localhost:8888/connect");
+      ws = new WebSocket("wss://dumtard.com/connect");
       ws.onopen = function (evt) {
         console.log("OPEN: " + evt.data);
         var request = {
