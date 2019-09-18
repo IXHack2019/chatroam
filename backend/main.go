@@ -77,12 +77,91 @@ type Client struct {
 	LastMsg  string
 }
 
-var connectedClients = make(map[string]*Client)
 var rooms []*Room
+var connectedClients = make(map[string]*Client)
+var botClients = []*Client{
+	&Client{
+		Username: "Matt Lewis",
+		Lat:      43.652375,
+		Lon:      -79.376576,
+		LastMsg:  "This app is siiiick! YEET!",
+	},
+	&Client{
+		Username: "Charles Black",
+		Lat:      43.652238,
+		Lon:      -79.380588,
+		LastMsg:  "Go Redskins!!!",
+	},
+	&Client{
+		Username: "Frank Castle",
+		Lat:      43.652112,
+		Lon:      -79.380688,
+		LastMsg:  "It's time for punishment",
+	},
+	&Client{
+		Username: "George Foreman",
+		Lat:      43.652438,
+		Lon:      -79.380388,
+		LastMsg:  "Cook a steak in 5 minutes!",
+	},
+	&Client{
+		Username: "Gloria Raynor",
+		Lat:      43.651238,
+		Lon:      -79.381588,
+		LastMsg:  "Respect!",
+	},
+	&Client{
+		Username: "Marie Curie",
+		Lat:      43.651438,
+		Lon:      -79.381288,
+		LastMsg:  "Yeah! Science!",
+	},
+	&Client{
+		Username: "Johan Strutt",
+		Lat:      43.653238,
+		Lon:      -79.384588,
+		LastMsg:  "Howdy There",
+	},
+	&Client{
+		Username: "Julio Jones",
+		Lat:      43.653238,
+		Lon:      -79.382588,
+		LastMsg:  "Matty Ice hit me up in the end zone!",
+	},
+	&Client{
+		Username: "Adrian Peterson",
+		Lat:      43.652510,
+		Lon:      -79.390468,
+		LastMsg:  "Wow. An orange peanut? For me? Wow",
+	},
+	&Client{
+		Username: "Tedd George",
+		Lat:      43.649161,
+		Lon:      -79.375986,
+		LastMsg:  "Anyone interested in grabbing some dim sum?",
+	},
+	&Client{
+		Username: "Lucy Diamond",
+		Lat:      43.655029,
+		Lon:      -79.370690,
+		LastMsg:  "Looking for someone to go shopping with!!!",
+	},
+	&Client{
+		Username: "Emilio Vasquez",
+		Lat:      43.657715,
+		Lon:      -79.376414,
+		LastMsg:  "I just saw Brad Pitt at TIFF!!!",
+	},
+}
 
 func main() {
 	//TODO: fix reset not putting users in a new room
 	//go scheduler(time.NewTicker(time.Second * 5))
+
+	for _, bot := range botClients {
+		getRoomForClient(bot)
+	}
+
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
 	log.Fatal(http.ListenAndServe("localhost:8888", nil))
@@ -197,9 +276,11 @@ func (client *Client) handleSend(message Message) {
 	client.LastMsg = receivedMessage.Msg
 
 	for _, member := range client.room.members {
-		log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
+		if member.socket != nil {
+			log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
 
-		member.socket.WriteJSON(message)
+			member.socket.WriteJSON(message)
+		}
 	}
 }
 

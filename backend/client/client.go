@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/websocket"
@@ -25,7 +26,18 @@ func main() {
 	deviceID, _ := reader.ReadString('\n')
 	deviceID = strings.Replace(deviceID, "\n", "", -1)
 
-	connectMsg := fmt.Sprintf(`{"type": 0, "data": {"deviceId": "%s", "lon": -79.380688, "lat":43.652112 } }`, deviceID)
+	fmt.Print("Enter Latitude: ")
+	lat, _ := reader.ReadString('\n')
+	lat = strings.Replace(lat, "\n", "", -1)
+
+	fmt.Print("Enter Longitude: ")
+	lon, _ := reader.ReadString('\n')
+	lon = strings.Replace(lon, "\n", "", -1)
+
+	latFloat, _ := strconv.ParseFloat(lat, 64)
+	lonFloat, _ := strconv.ParseFloat(lon, 64)
+
+	connectMsg := fmt.Sprintf(`{"type": 0, "data": {"deviceId": "%s", "lat": %f, "lon":%f } }`, deviceID, latFloat, lonFloat)
 	fmt.Printf("Sending message: %s\n", connectMsg)
 
 	err = c.WriteMessage(websocket.TextMessage, []byte(connectMsg))
@@ -54,10 +66,11 @@ func main() {
 	}()
 
 	for {
-		fmt.Print("Enter JSON to send: ")
-		json, _ := reader.ReadString('\n')
-		json = strings.Replace(json, "\n", "", -1)
-		fmt.Printf("Sending message: %s\n", json)
+		fmt.Print("Enter msg to send: ")
+		msg, _ := reader.ReadString('\n')
+		msg = strings.Replace(msg, "\n", "", -1)
+		json := fmt.Sprintf(`{"type": 1, "data": {"deviceId": "%s", "msg":"%s" } }`, deviceID, msg)
+		fmt.Printf(`Sending message: %s`, json)
 
 		err = c.WriteMessage(websocket.TextMessage, []byte(json))
 		if err != nil {
