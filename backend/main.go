@@ -284,12 +284,14 @@ func (client *Client) handleSend(message Message) {
 	}
 
 	client.LastMsg = receivedMessage.Msg
-	client.room.messages = append(client.room.messages, RoomMessage{
-		Name: client.Username,
-		Text: receivedMessage.Msg,
-	})
-	if len(client.room.messages) > 10 {
-		client.room.messages = client.room.messages[1:]
+	if client.room != nil {
+		client.room.messages = append(client.room.messages, RoomMessage{
+			Name: client.Username,
+			Text: receivedMessage.Msg,
+		})
+		if len(client.room.messages) > 10 {
+			client.room.messages = client.room.messages[1:]
+		}
 	}
 
 	for _, member := range client.room.members {
