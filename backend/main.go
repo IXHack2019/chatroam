@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -152,12 +153,6 @@ var botClients = []*Client{
 		Lon:      -79.370690,
 		LastMsg:  "Looking for someone to go shopping with!!!",
 	},
-	&Client{
-		Username: "Emilio Vasquez",
-		Lat:      43.657715,
-		Lon:      -79.376414,
-		LastMsg:  "I just saw Brad Pitt at TIFF!!!",
-	},
 }
 
 func main() {
@@ -197,6 +192,12 @@ func updateTestClients() {
 
 	for _, testClient := range botClients {
 		testClient.LastMsg = generation.GetRandomMessage()
+		for _, client := range testClient.room.members {
+			if client.socket != nil {
+				client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, testClient.Username, testClient.LastMsg)))
+			}
+		}
+
 		offset := float64(rand.Intn(100))*0.00001 - 0.0005
 		testClient.Lat += offset
 		offset = float64(rand.Intn(100))*0.00001 - 0.0005
