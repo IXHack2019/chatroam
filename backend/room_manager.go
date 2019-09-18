@@ -65,6 +65,7 @@ func getRoomForClient(client *Client) {
 		newRoom := &Room{
 			members: []*Client{},
 			expiry:  time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1,
+			mutex:   &sync.Mutex{},
 		}
 		newRoom.members = append(newRoom.members, client)
 		client.room = newRoom

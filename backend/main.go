@@ -6,6 +6,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"sync"
 	"time"
 
 	"./generation"
@@ -17,6 +18,19 @@ type Room struct {
 	members  []*Client
 	expiry   int64
 	messages []RoomMessage
+	mutex    *sync.Mutex
+}
+
+func (r *Room) AddMessage(message RoomMessage) {
+	r.mutex.Lock()
+	defer func() {
+		r.mutex.Unlock()
+	}()
+
+	r.messages = append(r.messages, message)
+	if len(r.messages) > 10 {
+		r.messages = r.messages[1:]
+	}
 }
 
 type RoomMessage struct {
@@ -209,13 +223,10 @@ func updateTestClients() {
 				client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, testClient.Username, testClient.LastMsg)))
 			}
 		}
-		testClient.room.messages = append(testClient.room.messages, RoomMessage{
+		testClient.room.AddMessage(RoomMessage{
 			Name: testClient.Username,
 			Text: testClient.LastMsg,
 		})
-		if len(testClient.room.messages) > 10 {
-			testClient.room.messages = testClient.room.messages[1:]
-		}
 
 		offset := float64(rand.Intn(100))*0.00001 - 0.0005
 		testClient.Lat += offset
@@ -299,13 +310,10 @@ func (client *Client) handleSend(message Message) {
 
 	client.LastMsg = receivedMessage.Msg
 	if client.room != nil {
-		client.room.messages = append(client.room.messages, RoomMessage{
+		client.room.AddMessage(RoomMessage{
 			Name: client.Username,
 			Text: receivedMessage.Msg,
 		})
-		if len(client.room.messages) > 10 {
-			client.room.messages = client.room.messages[1:]
-		}
 	}
 
 	for _, member := range client.room.members {
