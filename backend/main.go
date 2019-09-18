@@ -3,13 +3,11 @@ package main
 import (
 	"encoding/json"
 	"log"
+	"math/rand"
 	"net/http"
 	"time"
 
 	"./generation"
-
-	// "log"
-	// "math/rand"
 
 	"github.com/gorilla/websocket"
 )
@@ -157,9 +155,9 @@ var botClients = []*Client{
 }
 
 func main() {
-	// for _, bot := range botClients {
-	// 	getRoomForClient(bot)
-	// }
+	for _, bot := range botClients {
+		getRoomForClient(bot)
+	}
 
 	go scheduler(time.NewTicker(time.Second * 5))
 
@@ -175,8 +173,22 @@ func scheduler(tick *time.Ticker) {
 }
 
 func updateTestClients() {
+	for _, client := range connectedClients {
+		offset := float64(rand.Intn(100))*0.00001 - 0.0005
+		client.Lat += offset
+		offset = float64(rand.Intn(100))*0.00001 - 0.0005
+		client.Lon += offset
+
+		time.Sleep(200 * time.Millisecond)
+	}
+
 	for _, testClient := range botClients {
 		testClient.LastMsg = generation.GetRandomMessage()
+		offset := float64(rand.Intn(100))*0.00001 - 0.0005
+		testClient.Lat += offset
+		offset = float64(rand.Intn(100))*0.00001 - 0.0005
+		testClient.Lon += offset
+
 		time.Sleep(200 * time.Millisecond)
 	}
 }
