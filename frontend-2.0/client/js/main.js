@@ -20,7 +20,7 @@ function buildConnection() {
    }
    ws.onclose = function (evt) {
       console.log("CLOSED");
-      reconnect();
+      // reconnect();
    }
    ws.onmessage = function (evt) {
       console.log("RESPONSE: " + evt.data);
@@ -42,12 +42,13 @@ function buildConnection() {
 }
 
 function connect() {
-   if(ws.readyState === WebSocket.CLOSED) {
-      buildConnection();
-   }
+   // if(ws.readyState === WebSocket.CLOSED) {
+   //    buildConnection();
+   // }
    if(ws.readyState === WebSocket.OPEN) {
       clearInterval(connecting);
    }
+   console.log("send");
    var request = {
       "type": 0,
       "data": {
@@ -109,16 +110,17 @@ function throwPositionError(error) {
 
 function writeMessage(data, personal) {
    let color = idToRGB(data.deviceId, 0.5);
+   let html = "<div class='";
    if(personal) {
-      color = "white";
+      html += "personalbox";
+      color = "#D6EAF8";
+   } else {
+      html += "senderbox"
    }
-   let html = "<span class='message bubble' style='background-color: " + color + "'>\
-      <div class='username'>" + data.username + "</div> \
-      <div class='text'>" + data.msg + "</span></div>";
+   html += "'><div class='username'>" + data.username + "</div> \
+      <span class='message bubble' style='background-color: " + color + "'>\
+      <div class='text'>" + data.msg + "</span></div></div>";
    let $msg = $(html);
-   if(personal) {
-      $msg.addClass("personal");
-   } 
    $("#board").append($msg);
    window.scrollTo(0,document.body.scrollHeight);
 }

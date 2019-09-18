@@ -105,7 +105,7 @@
         return { radius: distance / 2, midpoint: midpoint };
       }
 
-      var chatData = [{
+      var groupData = [{
          roomID: 1,
          chatlog: ['Hey who knows a good ice cream spot?', 'Ohhh I love ice cream!!! I also am looking for a good spot', 'There is a great place near Dundas square, check it out!'],
          locations: [[43.853, -79.383], [43.453, -79.383], [43.653, -79.183], [43.653, -79.583]]
@@ -127,9 +127,9 @@
 
         // Construct the circle for each value in citymap.
         // Note: We scale the area of the circle based on the population.
-        for (var index in chatData) {
-          var roomID = chatData[index].roomID;
-          var coordinates = chatData[index].locations;
+        for (var index in groupData) {
+          var roomID = groupData[index].roomID;
+          var coordinates = groupData[index].locations;
 
           var groupCenterObj = getGroupCenter(coordinates);
           var groupLat = groupCenterObj.midpoint[0];
@@ -137,7 +137,7 @@
 					var groupRadius = groupCenterObj.radius;
 
 				  var infowindow = new google.maps.InfoWindow();
-          var chatLog = formatChatLogs(chatData[index].chatlog);
+          var chatLog = formatChatLogs(groupData[index].chatlog);
 
 					var groupColor = getColor(roomID);
 					var marker = new google.maps.Marker({
