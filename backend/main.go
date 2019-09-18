@@ -91,19 +91,10 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 
 	var client *Client
 	defer func() {
-		log.Printf("Removing client %s from room", client.DeviceId)
-
 		if client != nil {
-			delete(connectedClients, client.DeviceId)
+			log.Printf("Removing client %s from room", client.DeviceId)
+			freeClient(client)
 		}
-
-		var newMembers []*Client
-		for _, roomClient := range client.room.members {
-			if roomClient != client {
-				newMembers = append(newMembers, roomClient)
-			}
-		}
-		client.room.members = newMembers
 	}()
 
 	for {
