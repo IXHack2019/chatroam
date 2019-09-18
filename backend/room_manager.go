@@ -15,9 +15,12 @@ var mutex = &sync.Mutex{}
 func getRoomForClient(client *Client) {
 	minDistance := math.MaxFloat64
 	var minRoom *Room = nil
+	mutex.Lock()
+	defer func() {
+		mutex.Unlock()
+	}()
 
 	for i, room := range rooms {
-		mutex.Lock()
 		//curr := time.Now().UnixNano() / int64(time.Millisecond)
 		if len(room.members) < maxGroupSize { // && curr <= room.expiry {
 			if len(room.members) != 0 {
@@ -31,14 +34,13 @@ func getRoomForClient(client *Client) {
 					minDistance = distance
 					minRoom = room
 				}
-			} else {
+			} else if minRoom == nil {
 				//room is empty, use it as last resort
 				//treat -1 as infinity
 				minDistance = -1
 				minRoom = room
 			}
 		}
-		mutex.Unlock()
 	}
 
 	if minRoom != nil {

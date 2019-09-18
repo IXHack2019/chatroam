@@ -201,6 +201,9 @@ func updateTestClients() {
 			Name: testClient.Username,
 			Text: testClient.LastMsg,
 		})
+		if len(testClient.room.messages) > 10 {
+			testClient.room.messages = testClient.room.messages[1:]
+		}
 
 		offset := float64(rand.Intn(100))*0.00001 - 0.0005
 		testClient.Lat += offset
@@ -285,6 +288,9 @@ func (client *Client) handleSend(message Message) {
 		Name: client.Username,
 		Text: receivedMessage.Msg,
 	})
+	if len(client.room.messages) > 10 {
+		client.room.messages = client.room.messages[1:]
+	}
 
 	for _, member := range client.room.members {
 		if member.socket != nil {
