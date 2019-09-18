@@ -50,7 +50,7 @@ type ReceivedMessage struct {
 }
 
 type RegistrationResponse struct {
-	Type     int
+	Type     int `json:"type"`
 	Username string `json:"username"`
 }
 
