@@ -68,7 +68,7 @@ func freeClient(client *Client) bool {
 		return true
 	}
 
-	client.room = nil
+	//client.room = nil
 	success := false
 
 	mutex.Lock()
