@@ -44,6 +44,18 @@ func main() {
 	}
 	log.Printf("Connect response: %s\n", message)
 
+	go func() {
+		for {
+			_, message, err := c.ReadMessage()
+			if err != nil {
+				log.Println("read:", err)
+				return
+			}
+
+			log.Printf("\nReceived message: %sEnter JSON to send: ", message)
+		}
+	}()
+
 	for {
 		fmt.Print("Enter JSON to send: ")
 		json, _ := reader.ReadString('\n')
@@ -54,22 +66,6 @@ func main() {
 		if err != nil {
 			log.Println("write:", err)
 			return
-		}
-
-		for {
-			_, message, err := c.ReadMessage()
-			if err != nil {
-				log.Println("read:", err)
-				return
-			}
-
-			if strings.Contains(string(message), `"type":1`) {
-				log.Printf("\nReceived broadcast: %sEnter JSON to send: ", message)
-				continue
-			}
-
-			log.Printf("Received response: %s\n", message)
-			break
 		}
 	}
 }
