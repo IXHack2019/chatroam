@@ -67,8 +67,8 @@ function reconnect() {
 function sendRequestWithPosition(request) {
    getPosition()
       .then(function(coords) {
-         request.data.lat = coords[0] !== undefined ? coords[0] : 43.6425829792536;
-         request.data.lon = coords[1] !== undefined ? coords[1] : -79.38512721871393;
+         request.data.lat = coords[0];
+         request.data.lon = coords[1];
          console.log("SEND: " + JSON.stringify(request));
          ws.send(JSON.stringify(request));
       });
@@ -76,9 +76,13 @@ function sendRequestWithPosition(request) {
 
 function getPosition() {
    return new Promise(function(resolve, reject) {
-      navigator.geolocation.getCurrentPosition(function (position) {
-         resolve([position.coords.latitude, position.coords.longitude]);
-      }, throwPositionError);
+      if(navigator.geolocation) {
+         resolve([43.6425829792536, -79.38512721871393]);
+      } else {
+         navigator.geolocation.getCurrentPosition(function (position) {
+            resolve([position.coords.latitude, position.coords.longitude]);
+         }, throwPositionError);
+      }
    });
 }
 
