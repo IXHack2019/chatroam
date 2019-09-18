@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	//"log" //TODO: find extension to auto remove unused imports
+	"log" //TODO: find extension to auto remove unused imports
 	"sync"
 	"time"
 
@@ -46,7 +46,11 @@ func getRoomForClient(client *Client) {
 			}
 		}
 	}
-
+	// if client.room == nil && len(rooms) > 0 {
+	// 	client.room = rooms[0]
+	// 	rooms[0].members = append(rooms[0].members, client)
+	// }
+	rooms = nil // TODO: make 
 	//no room was available - create new room
 	if client.room == nil {
 		newRoom := &Room{
@@ -101,26 +105,30 @@ func freeClient(client *Client) bool {
 
 // go through all rooms, vacate the expired rooms and put the clients into new rooms
 func resetRooms() {
-	// mutex.Lock()
+	// mutex.Lock() // TODO: synbc this stuff
 	// defer func() {
 	// 	mutex.Unlock()
 	// }()
 	var freeClients = make(map[int]*Client)
 
+	
 	for _, room := range rooms {
 		// curr := time.Now().UnixNano() / int64(time.Millisecond)
 		// if curr > room.expiry {
 		//room is expired - reset it
 		for i, clientInRoom := range room.members {
 			freeClients[i] = clientInRoom
-			freeClient(clientInRoom)
+			clientInRoom.room = nil
 		}
+
+		room.members = nil
 		// room.expiry = time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1
 		// }
 	}
 
 	for _, client := range freeClients {
 		// get a new room for the client
+		log.Println(client.Username);
 		getRoomForClient(client)
 	}
 
