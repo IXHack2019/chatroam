@@ -10,19 +10,31 @@ import (
 	"github.com/gorilla/websocket"
 )
 
+//type RoomManager struct {
+//	rooms: []*Room,
+//	mutex: *sync.Mutex{}
+//}
+//
+//func NewRoomManager() *RoomManager {
+//	return &RoomManager{
+//		mutex: sync.Mutex{}
+//	}
+//}
+
 var mutex = &sync.Mutex{}
 
 func getRoomForClient(client *Client) {
-	minDistance := math.MaxFloat64
-	var minRoom *Room = nil
 	mutex.Lock()
 	defer func() {
 		mutex.Unlock()
 	}()
 
+	minDistance := math.MaxFloat64
+	var minRoom *Room = nil
+
 	for i, room := range rooms {
-		//curr := time.Now().UnixNano() / int64(time.Millisecond)
-		if len(room.members) < maxGroupSize { // && curr <= room.expiry {
+		curr := time.Now().UnixNano() / int64(time.Millisecond)
+		if len(room.members) < maxGroupSize && curr <= room.expiry {
 			if len(room.members) != 0 {
 				firstMember := room.members[0]
 
@@ -60,7 +72,9 @@ func getRoomForClient(client *Client) {
 	}
 
 	for _, message := range client.room.messages {
-		client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, message.Name, message.Text)))
+		if client.socket != nil {
+			client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, message.Name, message.Text)))
+		}
 	}
 
 	printRooms()
@@ -68,6 +82,10 @@ func getRoomForClient(client *Client) {
 }
 
 func freeClient(client *Client) bool {
+	mutex.Lock()
+	defer func() {
+		mutex.Unlock()
+	}()
 
 	room := client.room
 
@@ -79,8 +97,6 @@ func freeClient(client *Client) bool {
 	//client.room = nil
 	success := false
 
-	mutex.Lock()
-
 	//delete the client from room members
 	for i, clientInRoom := range room.members {
 		if clientInRoom == client {
@@ -89,8 +105,6 @@ func freeClient(client *Client) bool {
 		}
 	}
 
-	mutex.Unlock()
-
 	printRooms()
 
 	return success
@@ -98,6 +112,10 @@ func freeClient(client *Client) bool {
 
 // go through all rooms, vacate the expired rooms and put the clients into new rooms
 func resetRooms() {
+	mutex.Lock()
+	defer func() {
+		mutex.Unlock()
+	}()
 
 	for _, room := range rooms {
 		curr := time.Now().UnixNano() / int64(time.Millisecond)
