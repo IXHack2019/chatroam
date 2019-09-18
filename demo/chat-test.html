@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+  <meta charset="utf-8">
+  <title>Circles</title>
+  <style>
+    /* Always set the map height explicitly to define the size of the div
+    * element that contains the map. */
+    #map {
+      height: 100%;
+    }
+    /* Optional: Makes the sample page fill the window. */
+    html, body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZspwiS5iiIwwSsUT4ofXTG0uSv4-3VTI"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js"></script>
+  <script>
+    // Get users from server
+    let ws;
+  
+    $(document).ready(function() {
+      ws = new WebSocket("ws://localhost:8888/connect");
+      ws.onopen = function (evt) {
+        console.log("OPEN: " + evt.data);
+        var request = {
+          "type": 2
+        }
+        ws.send(JSON.stringify(request));
+      }
+      ws.onclose = function (evt) {
+          ws = null;
+      }
+      ws.onmessage = function (evt) {
+          console.log("RESPONSE: " + evt.data);
+          response = JSON.parse(evt.data);
+          if(response.type == 2) {
+            loadGroups(response.records)
+          }
+      }
+      ws.onerror = function (evt) {
+          console.log("ERROR: " + evt.data);
+      }
+
+      SlidingMarker.initializeGlobally();
+      initMap();
+    });
+    </script>
+</head>
+<body>
+  <div id="map"></div>
+  <script>
+  // This example creates circles on the map, representing populations in North
+  // America.
+  
+  function getIcon(color) {
+    return {
+      path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z M -2,-30 a 2,2 0 1,1 4,0 2,2 0 1,1 -4,0',
+      fillColor: color,
+      fillOpacity: 1,
+      strokeColor: '#000',
+      strokeWeight: 2,
+      scale: 1,
+    };
+  }
+
+  function getColor(groupId) {
+    if (groupId in idToColor) {
+            return idToColor[groupId];
+    } else {
+            var maxIteration = 100;
+            for (var i = 0; i < maxIteration; i ++) {
+                var color = getRandomColor();
+            if (!(color in presentColor)) {
+                    presentColor.push(color);
+                idToColor[groupId] = color;
+                return color;
+            }
+        }
+        // TODO: figure out what if no color could be matched
+        return "#FFFFFF";
+    }
+  }
+
+  function getRandomColor() {
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
+  }
+
+  // First, create an object containing LatLng and population for each city.
+  var groupData = [{
+   roomID: 1,
+   chatlog: ['Hey who knows a good ice cream spot?', 'Ohhh I love ice cream!!! I also am looking for a good spot', 'There is a great place near Dundas square, check it out!'],
+   locations: [[43.853, -79.383], [43.453, -79.383], [43.653, -79.183], [43.653, -79.583]]
+  },{
+   roomID: 2,
+   chatlog: ["Dang I'm really hungry!", "oooohhhh me tooooo!!!!", "Let's go grab some sushi!!!"],
+   locations: [[43.753, -79.483], [43.553, -79.483], [43.653, -79.583], [43.653, -79.383]]
+  }];
+
+  function generateNewGroups() {
+    var newGroups = users;
+
+    var usernames = [];
+    for (index in users) {
+      var user = users[index];
+      usernames.push(user.name);
+    }
+
+    usernames = shuffle(usernames);
+
+    for (index in newGroups) {
+      var user = users[index];
+      user.name = usernames[index];
+    }
+
+    return newGroups;
+  }
+
+  function shuffle(a) {
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
+  }
+
+  // Google map style with no extra transit icon, with dark color style
+  var cleanNightMode = [
+    {
+      featureType: "poi",
+      stylers: [
+        { visibility: "off" }
+      ]   
+    },
+    {
+      featureType: "transit",
+      stylers: [
+        { visibility: "off" }
+      ]   
+    },
+    // Referenced from the example style at https://developers.google.com/maps/documentation/javascript/styling
+    {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+    {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+    {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+    {
+      featureType: 'administrative.locality',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#d59563'}]
+    },
+    {
+      featureType: 'poi',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#d59563'}]
+    },
+    {
+      featureType: 'poi.park',
+      elementType: 'geometry',
+      stylers: [{color: '#263c3f'}]
+    },
+    {
+      featureType: 'poi.park',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#6b9a76'}]
+    },
+    {
+      featureType: 'road',
+      elementType: 'geometry',
+      stylers: [{color: '#38414e'}]
+    },
+    {
+      featureType: 'road',
+      elementType: 'geometry.stroke',
+      stylers: [{color: '#212a37'}]
+    },
+    {
+      featureType: 'road',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#9ca5b3'}]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'geometry',
+      stylers: [{color: '#746855'}]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'geometry.stroke',
+      stylers: [{color: '#1f2835'}]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#f3d19c'}]
+    },
+    {
+      featureType: 'transit',
+      elementType: 'geometry',
+      stylers: [{color: '#2f3948'}]
+    },
+    {
+      featureType: 'transit.station',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#d59563'}]
+    },
+    {
+      featureType: 'water',
+      elementType: 'geometry',
+      stylers: [{color: '#17263c'}]
+    },
+    {
+      featureType: 'water',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#515c6d'}]
+    },
+    {
+      featureType: 'water',
+      elementType: 'labels.text.stroke',
+      stylers: [{color: '#17263c'}]
+    }
+  ];
+
+      function getGroupCenter(coordinates) {
+        var maxDistance = 0;
+        var maxIndex;
+        var distancePairs = [];
+        for (var index in coordinates) {
+          var x1 = coordinates[index][0];
+          var y1 = coordinates[index][1];
+          for (var idx in coordinates) {
+            if (idx == index) continue;
+            var x2 = coordinates[idx][0];
+            var y2 = coordinates[idx][1];
+            var dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            var pairObj = {
+              distance: dist,
+              midpoint: [(x1 + x2)/2, (y1 + y2)/2]
+            };
+
+            distancePairs.push(pairObj);
+          }
+        }
+        for (var index in distancePairs) {
+          var dist = distancePairs[index].distance;
+          if (dist > maxDistance) {
+            maxDistance = dist;
+            maxIndex = index;
+          }
+        }
+				var midpoint = distancePairs[maxIndex].midpoint
+				var distance = distancePairs[maxIndex].distance;
+        return { radius: distance / 2, midpoint: midpoint };
+      }
+
+  //setInterval(initMap, 40000);
+ // setInterval(function() {
+ //   // var newGroups = generateNewGroups();
+ //   // loadGroups(newGroups);
+ //   var request = {
+ //     "type": 2
+ //   }
+ //   ws.send(JSON.stringify(request));
+ // }, 10000);
+
+  var idToColor = {};
+  var presentColor = [];
+  var openWindows = [];
+  var maxWindows = 3;
+  var markerInfo = {};
+  var groupMarkers = {};
+  var map;
+
+  function initMap() {
+    idToColor = {};
+    presentColor = [];
+    
+    // Create the map.
+    map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 16,
+      center: {lat: 43.653, lng: -79.383},
+      mapTypeId: 'terrain',
+      mapTypeControl: false,
+      backgroundColor: "none",
+      styles: cleanNightMode
+    });
+    //map.data.remove("poi");
+    //map.data.remove("transit");
+    //map.setOptions({styles: noPoi, backgroundColor: "black"});
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(function(position) {
+        map.setCenter({lat: position.coords.latitude, lng: position.coords.longitude});
+      }, function() {
+        handleLocationError(true, infoWindow, map.getCenter());
+      });
+    }
+
+    loadGroups(groupData)
+  }
+
+  function loadGroups(newGroups) {
+    // Construct the circle for each value in citymap.
+    // Note: We scale the area of the circle based on the population.
+    var newGroupMap = {};
+    for (var index in newGroups) {
+      var groupObj = newGroups[index];
+      var roomID = newGroups[index].roomID;
+      var coordinates = newGroups[index].locations;
+
+      var groupCenterObj = getGroupCenter(coordinates);
+      var groupLat = groupCenterObj.midpoint[0];
+      var groupLon = groupCenterObj.midpoint[1];
+      var groupRadius = groupCenterObj.radius;
+      var groupChatLog = groupObj.chatlog;
+      var groupColor = getColor(roomID);
+
+      newGroupMap[roomID.toString()] = true;
+
+      if (!(roomID in groupMarkers)) {
+
+        var marker = new google.maps.Marker({
+          icon: getIcon(groupColor),
+          position: { lat: groupLat, lng: groupLon },
+          map: map,
+          animation: google.maps.Animation.DROP,
+          info: groupChatLog,
+          title: roomID.toString()
+        });
+
+				var groupCircle = new google.maps.Circle({
+          strokeColor: groupColor,
+          strokeOpacity: 0.8,
+          strokeWeight: 2,
+          fillColor: groupColor,
+          fillOpacity: 0.35,
+          map: map,
+          center: {lat: groupLat, lng: groupLon},
+          radius: groupRadius * 100000
+        });
+
+        var infowindow = new google.maps.InfoWindow({
+          Content: roomID.toString() + ": " + groupChatLog
+        });
+
+        markerInfo[groupObj.name] = infowindow;
+        marker.addListener('mouseover', function() {
+          var markerwindow = markerInfo[this.title];
+          markerwindow.setContent(this.title + ": " + this.info);
+          markerwindow.open(map, this);
+        });
+
+        groupMarkers[groupObj.name] = marker
+      } else {
+        var marker = groupMarkers[roomID];
+        marker.setOptions({
+          icon: getIcon(getColor(roomID)),
+          position: { lat: groupLat, lng: groupLon },
+          info: groupChatLog
+        });
+
+        var infowindow = markerInfo[roomID];
+        setTimeout(function() {
+          var markerwindow = markerInfo[this.title];
+          markerwindow.setContent(this.title + ": " + this.info);
+        }.bind(marker), 1000);
+      }
+    }
+
+    var newMarkers = {};
+    for (var index in groupMarkers) {
+      marker = groupMarkers[index];
+      if (!(marker.getTitle() in newGroupMap)) {
+        marker.setMap(null);
+      } else {
+        newMarkers[marker.getTitle()] = marker;
+      }
+    }
+    groupMarkers = newMarkers;
+  }
+  </script>
+</body>
+</html>
