@@ -33,8 +33,8 @@ func getRoomForClient(client *Client) {
 	var minRoom *Room = nil
 
 	for i, room := range rooms {
-		curr := time.Now().UnixNano() / int64(time.Millisecond)
-		if len(room.members) < maxGroupSize && curr <= room.expiry {
+		//curr := time.Now().UnixNano() / int64(time.Millisecond)
+		if len(room.members) < maxGroupSize { //} && curr <= room.expiry {
 			if len(room.members) != 0 {
 				firstMember := room.members[0]
 
