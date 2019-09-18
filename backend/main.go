@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -13,8 +14,14 @@ import (
 )
 
 type Room struct {
-	members []*Client
-	expiry  int64
+	members  []*Client
+	expiry   int64
+	messages []RoomMessage
+}
+
+type RoomMessage struct {
+	Name string
+	Text string
 }
 
 // Configure the upgrader
@@ -259,6 +266,10 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	connectedClients[connect.DeviceId] = client
 
 	client.socket.WriteJSON(RegistrationResponse{0, client.Username})
+
+	for _, message := range client.room.messages {
+		client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, message.Name, message.Text)))
+	}
 }
 
 func (client *Client) handleSend(message Message) {
@@ -270,6 +281,10 @@ func (client *Client) handleSend(message Message) {
 	}
 
 	client.LastMsg = receivedMessage.Msg
+	client.room.messages = append(client.room.messages, RoomMessage{
+		Name: client.Username,
+		Text: receivedMessage.Msg,
+	})
 
 	for _, member := range client.room.members {
 		if member.socket != nil {
