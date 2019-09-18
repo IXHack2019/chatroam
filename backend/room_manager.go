@@ -103,6 +103,7 @@ func freeClient(client *Client) bool {
 		if clientInRoom == client {
 			room.members = append(room.members[:i], room.members[i+1:]...)
 			success = true
+			break
 		}
 	}
 
