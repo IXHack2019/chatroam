@@ -317,7 +317,7 @@ func (client *Client) handleSend(message Message) {
 	}
 
 	for _, member := range client.room.members {
-		if member.socket != nil {
+		if member != nil && member.socket != nil {
 			log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
 
 			member.socket.WriteJSON(message)
