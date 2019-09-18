@@ -302,12 +302,12 @@
 
   //setInterval(initMap, 40000);
   setInterval(function() {
-    // var newUsers = generateNewUsers();
-    // loadUsers(newUsers);
-    var request = {
-      "type": 2
-    }
-    ws.send(JSON.stringify(request));
+    var newUsers = generateNewUsers();
+    loadUsers(newUsers);
+    // var request = {
+    //   "type": 2
+    // }
+    // ws.send(JSON.stringify(request));
   }, 10000);
 
   var idToColor = {};
@@ -316,6 +316,8 @@
   var maxWindows = 3;
   var markerInfo = {};
   var userMarkers = {};
+  var markerUser = {};
+  var idToUsers = {};
   var map;
 
   function initMap() {
@@ -353,19 +355,12 @@
     for (var index in newUsers) {
       user = newUsers[index];
       newUserMap[user.name] = true;
-      //var idx = users[user].roomID % 8;
-      // var marker = new google.maps.Marker({
-      //   icon: getIcon(getColor(users[user].roomID)),
-      //   position: { lat: users[user].lat, lng: users[user].lon},
-      //   map: map,
-      //   title: users[user].name
-      // });
-      // var infowindow = new google.maps.InfoWindow({
-      //   content: users[user].lastMsg
-      // });
-      // marker.addListener('mouseover', function() {
-      //   infowindow.open(map, this);
-      // });
+
+      // Add current user to relevant group with his room id
+      if (!(user.roomID in idToUsers)) {
+        idToUsers[user.roomID] = [];
+      }
+      idToUsers[user.roomID].push(user);
 
       if (!(user.name in userMarkers)) {
 
@@ -384,12 +379,34 @@
 
         markerInfo[user.name] = infowindow;
         marker.addListener('mouseover', function() {
-          var markerwindow = markerInfo[this.title];
+          markerwindow = markerInfo[this.title];
           markerwindow.setContent(this.title + ": " + this.info);
+          
+          // currUser = markerUser[this.title];
+          // targetRoomId = currUser.roomID;
+          // users = idToUsers[targetRoomId];
+          // // Close all previously opened windows
+          // while (openWindows.length > 0) {
+          //   openWindows.shift().close();
+          // }
+          // // Open all windows of people in the same group
+          // for (var i in users) {
+          //   targetUser = users[i];
+          //   targetMarker = userMarkers[targetUser.name];
+          //   targetWindow = markerInfo[targetUser.name];
+          //   openWindows.push(targetWindow);
+          //   targetWindow.open(map, targetMarker);
+          // }
+          
+          if (openWindows.length >= maxWindows) {
+            openWindows.shift().close()
+          }
+          openWindows.push(markerwindow)
           markerwindow.open(map, this);
         });
 
-        userMarkers[user.name] = marker
+        userMarkers[user.name] = marker;
+        markerUser[marker.title] = user;
       } else {
         var marker = userMarkers[user.name];
         marker.setOptions({
