@@ -61,12 +61,12 @@ func main() {
 				return
 			}
 
-			fmt.Printf("\nReceived message: %s\nEnter JSON to send: ", message)
+			fmt.Printf("\nReceived message: %s\nEnter message to send: ", message)
 		}
 	}()
 
 	for {
-		fmt.Print("Enter msg to send: ")
+		fmt.Print("Enter message to send: ")
 		msg, _ := reader.ReadString('\n')
 		msg = strings.Replace(msg, "\n", "", -1)
 		json := fmt.Sprintf(`{"type": 1, "data": {"deviceId": "%s", "msg":"%s" } }`, deviceID, msg)
