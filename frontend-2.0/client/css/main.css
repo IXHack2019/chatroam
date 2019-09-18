@@ -6,21 +6,6 @@ body {
 }
 
 #board-container {
-<<<<<<< HEAD
-	background-color: #ffffff;
-	padding: 15px;
-	width: 100%;
-}
-
-#board {
-	max-width: 100%;
-	margin: 0 auto;
-	display: grid;
-	grid-gap: 5px;
-	grid-template-columns: 1fr;
-	width: 100%;
-	padding: 10px;
-=======
     background-color: #ffffff;
     padding: 15px;
     width: 100%;
@@ -35,21 +20,10 @@ body {
     grid-template-columns: 1fr;
     width: 100%;
     padding: 10px;
->>>>>>> 7f3b924995cf853f064df883cebaa406fc373ab0
 }
 
 
 .message.bubble {
-<<<<<<< HEAD
-	padding: 5px;
-	/*background-color: #EAEDED;*/
-	border-radius: 5px;
-	min-width: 30%;
-	max-width: 80%;
-	justify-self: start;
-	border-radius: 25px;
-	background-color: #85C1E9;
-=======
     padding: 10px;
     /*background-color: #EAEDED;*/
     border-radius: 8px;
@@ -83,7 +57,6 @@ body {
 
 .personalbox .message.bubble .text {
     text-align: right;
->>>>>>> 7f3b924995cf853f064df883cebaa406fc373ab0
 }
 
 .senderbox{
@@ -91,49 +64,6 @@ body {
     justify-items: start;
 }
 
-<<<<<<< HEAD
-
-.username {
-	background-color: #ffffff;
-	border-radius: 5px;
-	font-size: 1em;
-	padding: 5px;
-	font-style: italic;
-	justify-self: end;
-}
-
-
-.message.bubble .text {
-	font-size: 2em;
-	max-width: 50%;
-}
-
-/*.message.bubble .username {
-	color: #111D4A;
-	font-weight: bold;
-}
-*/
-
-.send {
-  background-color: #3498DB;
-  border: none;
-  color: white;
-  padding: 10px;
-  border-radius: 8px;
-  text-align: center;
-  text-decoration: none;
-  display: inline-block;
-  font-size: 16px;
-  margin: 4px 2px;
-  cursor: pointer;
-}
-
-
-.message.bubble.personal {
-	justify-self: end;
-	border-radius: 25px;
-
-=======
 .senderbox .username {
     justify-content: start;
 }
@@ -162,7 +92,6 @@ body {
   font-size: 1.5em;
   margin: 4px 2px;
   cursor: pointer;
->>>>>>> 7f3b924995cf853f064df883cebaa406fc373ab0
 }
 
 
@@ -194,24 +123,6 @@ body {
 	border: 2px solid #EAEDED;
 	padding: 23px;
 	width: 100%;
-<<<<<<< HEAD
-	display: grid;
-	grid-template-columns: 9fr 1fr;
-	grid-gap: 15px;
-	padding: 10px;
-	min-height: 10%;
-	background-color: #ffffff;
-}
-
-
-#text-box {
-	border-radius: 25px;
-  	border: 2px solid #EAEDED;
-  	padding: 23px;
-  	width: 100%;
-  	height: 100%;
-  	font-size: 100%;
-=======
 	height: 100%;
 	font-size: 1.5em;
 	outline: none;
@@ -233,7 +144,6 @@ body {
 	#input-box {
     	grid-template-columns: 9fr 1fr;
 	}
->>>>>>> 7f3b924995cf853f064df883cebaa406fc373ab0
 }
 /*$theme-primary: #8789C0;
 $theme-secondary: #111D4A;
