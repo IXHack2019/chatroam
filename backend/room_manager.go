@@ -6,29 +6,28 @@ import (
 	"time"
 )
 
-var pool = &sync.Pool{
-	// New creates an object when the pool has nothing available to return.
-	New: func() interface{} {
-		newRoom := &Room{
-			members: []*Client{},
-			expiry:  time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1,
-		}
-		rooms = append(rooms, newRoom)
-		return newRoom
-	},
-}
-
 var mutex = &sync.Mutex{}
 
 func getRoomForClient(client *Client) {
 
-	room := pool.Get().(*Room)
-	client.room = room
-	room.members = append(room.members, client)
+	for _, room := range rooms {
+		mutex.Lock()
+		if len(room.members) < maxGroupSize {
+			client.room = room
+			room.members = append(room.members, client)
+		}
+		mutex.Unlock()
+	}
 
-	//if room still has capacity, put it back in the pool
-	if len(room.members) < maxGroupSize {
-		pool.Put(room)
+	//no room was available - create new room
+	if client.room == nil {
+		newRoom := &Room{
+			members: []*Client{},
+			expiry:  time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1,
+		}
+		newRoom.members = append(newRoom.members, client)
+		client.room = newRoom
+		rooms = append(rooms, newRoom)
 	}
 
 	printRooms()
@@ -42,7 +41,6 @@ func freeClient(client *Client) bool {
 	success := false
 
 	mutex.Lock()
-	oldLen := len(room.members)
 
 	//delete the client from room members
 	for i, clientInRoom := range room.members {
@@ -52,10 +50,6 @@ func freeClient(client *Client) bool {
 		}
 	}
 
-	//if room now has capacity put it back in the pool
-	if oldLen >= maxGroupSize && len(room.members) < maxGroupSize {
-		pool.Put(room)
-	}
 	mutex.Unlock()
 
 	printRooms()
