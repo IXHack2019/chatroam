@@ -236,6 +236,14 @@
     }
   ];
 
+      function formatChatLogs(messages) {
+        var output = '';
+        for (var index in messages) {
+          output += messages[index] + '<br><br>';
+        }
+        return output;
+      }
+
       function getGroupCenter(coordinates) {
         var maxDistance = 0;
         var maxIndex;
@@ -327,9 +335,8 @@
       var groupLat = groupCenterObj.midpoint[0];
       var groupLon = groupCenterObj.midpoint[1];
       var groupRadius = groupCenterObj.radius;
-      var groupChatLog = groupObj.chatlog;
+      var groupChatLog = formatChatLogs(groupObj.chatlog);
       var groupColor = getColor(roomID);
-
       newGroupMap[roomID.toString()] = true;
 
       if (!(roomID in groupMarkers)) {
@@ -358,7 +365,7 @@
           Content: roomID.toString() + ": " + groupChatLog
         });
 
-        markerInfo[groupObj.name] = infowindow;
+        markerInfo[roomID.toString()] = infowindow;
         marker.addListener('mouseover', function() {
           var markerwindow = markerInfo[this.title];
           markerwindow.setContent(this.title + ": " + this.info);
@@ -374,7 +381,7 @@
           info: groupChatLog
         });
 
-        var infowindow = markerInfo[roomID];
+        var infowindow = markerInfo[roomID.toString()];
         setTimeout(function() {
           var markerwindow = markerInfo[this.title];
           markerwindow.setContent(this.title + ": " + this.info);
