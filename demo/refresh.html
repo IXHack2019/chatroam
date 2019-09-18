@@ -74,30 +74,30 @@
   }
 
   function getColor(groupId) {
-      if (groupId in idToColor) {
-              return idToColor[groupId];
-      } else {
-              var maxIteration = 100;
-              for (var i = 0; i < maxIteration; i ++) {
-                  var color = getRandomColor();
-              if (!(color in presentColor)) {
-                      presentColor.push(color);
-                  idToColor[groupId] = color;
-                  return color;
-              }
-          }
-          // TODO: figure out what if no color could be matched
-          return "#FFFFFF";
-      }
+    if (groupId in idToColor) {
+            return idToColor[groupId];
+    } else {
+            var maxIteration = 100;
+            for (var i = 0; i < maxIteration; i ++) {
+                var color = getRandomColor();
+            if (!(color in presentColor)) {
+                    presentColor.push(color);
+                idToColor[groupId] = color;
+                return color;
+            }
+        }
+        // TODO: figure out what if no color could be matched
+        return "#FFFFFF";
+    }
   }
 
   function getRandomColor() {
-      var letters = '0123456789ABCDEF';
-      var color = '#';
-      for (var i = 0; i < 6; i++) {
-          color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
+    var letters = '0123456789ABCDEF';
+    var color = '#';
+    for (var i = 0; i < 6; i++) {
+        color += letters[Math.floor(Math.random() * 16)];
+    }
+    return color;
   }
 
   // First, create an object containing LatLng and population for each city.
@@ -205,6 +205,101 @@
     return a;
   }
 
+  // Google map style with no extra transit icon, with dark color style
+  var cleanNightMode = [
+    {
+      featureType: "poi",
+      stylers: [
+        { visibility: "off" }
+      ]   
+    },
+    {
+      featureType: "transit",
+      stylers: [
+        { visibility: "off" }
+      ]   
+    },
+    // Referenced from the example style at https://developers.google.com/maps/documentation/javascript/styling
+    {elementType: 'geometry', stylers: [{color: '#242f3e'}]},
+    {elementType: 'labels.text.stroke', stylers: [{color: '#242f3e'}]},
+    {elementType: 'labels.text.fill', stylers: [{color: '#746855'}]},
+    {
+      featureType: 'administrative.locality',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#d59563'}]
+    },
+    {
+      featureType: 'poi',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#d59563'}]
+    },
+    {
+      featureType: 'poi.park',
+      elementType: 'geometry',
+      stylers: [{color: '#263c3f'}]
+    },
+    {
+      featureType: 'poi.park',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#6b9a76'}]
+    },
+    {
+      featureType: 'road',
+      elementType: 'geometry',
+      stylers: [{color: '#38414e'}]
+    },
+    {
+      featureType: 'road',
+      elementType: 'geometry.stroke',
+      stylers: [{color: '#212a37'}]
+    },
+    {
+      featureType: 'road',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#9ca5b3'}]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'geometry',
+      stylers: [{color: '#746855'}]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'geometry.stroke',
+      stylers: [{color: '#1f2835'}]
+    },
+    {
+      featureType: 'road.highway',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#f3d19c'}]
+    },
+    {
+      featureType: 'transit',
+      elementType: 'geometry',
+      stylers: [{color: '#2f3948'}]
+    },
+    {
+      featureType: 'transit.station',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#d59563'}]
+    },
+    {
+      featureType: 'water',
+      elementType: 'geometry',
+      stylers: [{color: '#17263c'}]
+    },
+    {
+      featureType: 'water',
+      elementType: 'labels.text.fill',
+      stylers: [{color: '#515c6d'}]
+    },
+    {
+      featureType: 'water',
+      elementType: 'labels.text.stroke',
+      stylers: [{color: '#17263c'}]
+    }
+  ];
+
   //setInterval(initMap, 40000);
   setInterval(function() {
     // var newUsers = generateNewUsers();
@@ -231,8 +326,14 @@
     map = new google.maps.Map(document.getElementById('map'), {
       zoom: 16,
       center: {lat: 43.653, lng: -79.383},
-      mapTypeId: 'terrain'
+      mapTypeId: 'terrain',
+      mapTypeControl: false,
+      backgroundColor: "none",
+      styles: cleanNightMode
     });
+    //map.data.remove("poi");
+    //map.data.remove("transit");
+    //map.setOptions({styles: noPoi, backgroundColor: "black"});
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(function(position) {
