@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"log"
-	"math"
+	//"log" //TODO: find extension to auto remove unused imports
 	"sync"
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/asim/quadtree"
+
 )
 
 //type RoomManager struct {
@@ -29,35 +30,22 @@ func getRoomForClient(client *Client) {
 		mutex.Unlock()
 	}()
 
-	minDistance := math.MaxFloat64
-	var minRoom *Room = nil
+	center := quadtree.NewPoint(client.Lat, client.Lon, nil)
+	bounds := quadtree.NewAABB(center, center.HalfPoint(maxSearchDistance))
 
-	for i, room := range rooms {
-		//curr := time.Now().UnixNano() / int64(time.Millisecond)
-		if len(room.members) < maxGroupSize { //} && curr <= room.expiry {
-			if len(room.members) != 0 {
-				firstMember := room.members[0]
+	maxPoints := 10 // Try this many points before giving up
+	for _, point := range qtree.KNearest(bounds, maxPoints, nil) {
+		//log.Printf("Found point: %s\n", point.Data().(string))
 
-				distance := distanceInKmBetweenEarthCoordinates(firstMember.Lat, firstMember.Lon, client.Lat, client.Lon)
+		nearClient := point.Data().(*Client)
+		if (nearClient.DeviceId != client.DeviceId) {
+			nearRoom := nearClient.room
 
-				log.Printf("Room %d lat1 %f lon1 %f lat2 %f lon2 %f Distance: %f\n", i, firstMember.Lat, firstMember.Lon, client.Lat, client.Lon, distance)
-
-				if distance < minDistance || minDistance < 0 {
-					minDistance = distance
-					minRoom = room
-				}
-			} else if minRoom == nil {
-				//room is empty, use it as last resort
-				//treat -1 as infinity
-				minDistance = -1
-				minRoom = room
+			if (len(nearRoom.members) < maxGroupSize) {
+				client.room = nearRoom
+				nearRoom.members = append(nearRoom.members, client)
 			}
 		}
-	}
-
-	if minRoom != nil {
-		minRoom.members = append(minRoom.members, client)
-		client.room = minRoom
 	}
 
 	//no room was available - create new room
@@ -114,10 +102,10 @@ func freeClient(client *Client) bool {
 
 // go through all rooms, vacate the expired rooms and put the clients into new rooms
 func resetRooms() {
-	mutex.Lock()
-	defer func() {
-		mutex.Unlock()
-	}()
+	// mutex.Lock()
+	// defer func() {
+	// 	mutex.Unlock()
+	// }()
 
 	for _, room := range rooms {
 		curr := time.Now().UnixNano() / int64(time.Millisecond)

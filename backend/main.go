@@ -12,6 +12,7 @@ import (
 	"./generation"
 
 	"github.com/gorilla/websocket"
+	"github.com/asim/quadtree"
 )
 
 type Room struct {
@@ -53,7 +54,7 @@ const (
 )
 
 const maxGroupSize = 3
-
+const maxSearchDistance = 10000
 // Define our message object
 type Message struct {
 	Type int             `json:"type"`
@@ -111,6 +112,7 @@ type Client struct {
 }
 
 var rooms []*Room
+var qtree *quadtree.QuadTree
 var connectedClients = make(map[string]*Client)
 var botClients = []*Client{
 	&Client{
@@ -182,11 +184,16 @@ var botClients = []*Client{
 }
 
 func main() {
-	for _, bot := range botClients {
-		getRoomForClient(bot)
-	}
+	centerPoint := quadtree.NewPoint(0.0, 0.0, nil)
+	halfPoint := quadtree.NewPoint(90.0, 180.0, nil)
+	boundingBox := quadtree.NewAABB(centerPoint, halfPoint)
+	
+	qtree = quadtree.New(boundingBox, 0, nil)
+	// for _, bot := range botClients {
+	// 	getRoomForClient(bot)
+	// }
 
-	go scheduler(time.NewTicker(time.Second * 5))
+	//go scheduler(time.NewTicker(time.Second * 5))
 	//go resetScheduler(time.NewTicker(time.Second * 5))
 
 	log.SetFlags(log.LstdFlags)
@@ -292,6 +299,11 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	client.Lon = connect.Lon
 	client.DeviceId = connect.DeviceId
 	client.Username = generation.GetRandomName()
+
+	point := quadtree.NewPoint(client.Lat, client.Lon, client)
+	if !qtree.Insert(point) {
+		log.Fatal("Failed to insert the point")
+	}
 
 	connectedClients[connect.DeviceId] = client
 
