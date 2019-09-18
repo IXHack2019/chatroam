@@ -66,8 +66,8 @@ function reconnect() {
 function sendRequestWithPosition(request) {
    getPosition()
       .then(function(coords) {
-         request.data.lat = coords[0];
-         request.data.lon = coords[1];
+         request.data.lat = coords[0] !== undefined ? coords[0] : 43.6425829792536;
+         request.data.lon = coords[1] !== undefined ? coords[1] : -79.38512721871393;
          console.log("SEND: " + JSON.stringify(request));
          ws.send(JSON.stringify(request));
       });
