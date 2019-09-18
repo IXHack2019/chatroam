@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"time"
 
+	"./generation"
+
 	// "log"
 	// "math/rand"
 
@@ -155,12 +157,11 @@ var botClients = []*Client{
 }
 
 func main() {
-	//TODO: fix reset not putting users in a new room
-	//go scheduler(time.NewTicker(time.Second * 5))
-
 	for _, bot := range botClients {
 		getRoomForClient(bot)
 	}
+
+	go scheduler(time.NewTicker(time.Second * 5))
 
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
@@ -169,7 +170,14 @@ func main() {
 
 func scheduler(tick *time.Ticker) {
 	for range tick.C {
-		resetRooms()
+		updateTestClients()
+	}
+}
+
+func updateTestClients() {
+	for _, testClient := range botClients {
+		testClient.LastMsg = generation.GetRandomMessage()
+		time.Sleep(200 * time.Millisecond)
 	}
 }
 
@@ -259,7 +267,7 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	client.Lat = connect.Lat
 	client.Lon = connect.Lon
 	client.DeviceId = connect.DeviceId
-	client.Username = getRandomName()
+	client.Username = generation.GetRandomName()
 	connectedClients[connect.DeviceId] = client
 
 	client.socket.WriteJSON(RegistrationResponse{0, client.Username})

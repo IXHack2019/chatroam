@@ -1,4 +1,4 @@
-package main
+package generation
 
 var adjectiveList = []string{
 	"abased",
