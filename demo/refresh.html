@@ -352,6 +352,10 @@
     // Construct the circle for each value in citymap.
     // Note: We scale the area of the circle based on the population.
     var newUserMap = {};
+    while (openWindows.length > 0) {
+      openWindows.pop().close()
+    }
+
     for (var index in newUsers) {
       user = newUsers[index];
       newUserMap[user.name] = true;
@@ -382,27 +386,27 @@
           markerwindow = markerInfo[this.title];
           markerwindow.setContent(this.title + ": " + this.info);
           
-          // currUser = markerUser[this.title];
-          // targetRoomId = currUser.roomID;
-          // users = idToUsers[targetRoomId];
-          // // Close all previously opened windows
-          // while (openWindows.length > 0) {
-          //   openWindows.shift().close();
-          // }
-          // // Open all windows of people in the same group
-          // for (var i in users) {
-          //   targetUser = users[i];
-          //   targetMarker = userMarkers[targetUser.name];
-          //   targetWindow = markerInfo[targetUser.name];
-          //   openWindows.push(targetWindow);
-          //   targetWindow.open(map, targetMarker);
-          // }
-          
-          if (openWindows.length >= maxWindows) {
-            openWindows.shift().close()
+          currUser = markerUser[this.title];
+          targetRoomId = currUser.roomID;
+          var users = idToUsers[targetRoomId];
+          // Close all previously opened windows
+          while (openWindows.length > 0) {
+            openWindows.shift().close();
           }
-          openWindows.push(markerwindow)
-          markerwindow.open(map, this);
+          // Open all windows of people in the same group
+          for (var i in users) {
+            targetUser = users[i];
+            targetMarker = userMarkers[targetUser.name];
+            targetWindow = markerInfo[targetUser.name];
+            openWindows.push(targetWindow);
+            targetWindow.open(map, targetMarker);
+          }
+          
+          // if (openWindows.length >= maxWindows) {
+          //   openWindows.shift().close()
+          // }
+          // openWindows.push(markerwindow)
+          // markerwindow.open(map, this);
         });
 
         userMarkers[user.name] = marker;
@@ -420,6 +424,7 @@
           var markerwindow = markerInfo[this.title];
           markerwindow.setContent(this.title + ": " + this.info);
         }.bind(marker), 1000);
+        markerUser[marker.title] = user;
       }
     }
 
@@ -430,6 +435,7 @@
         marker.setMap(null);
       } else {
         newMarkers[marker.getTitle()] = marker;
+        //markerUser[marker] = user;
       }
     }
     userMarkers = newMarkers;
