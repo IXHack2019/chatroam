@@ -6,6 +6,8 @@ import (
 	"math"
 	"sync"
 	"time"
+
+	"github.com/gorilla/websocket"
 )
 
 var mutex = &sync.Mutex{}
@@ -16,8 +18,8 @@ func getRoomForClient(client *Client) {
 
 	for i, room := range rooms {
 		mutex.Lock()
-		curr := time.Now().UnixNano() / int64(time.Millisecond)
-		if len(room.members) < maxGroupSize && curr <= room.expiry {
+		//curr := time.Now().UnixNano() / int64(time.Millisecond)
+		if len(room.members) < maxGroupSize { // && curr <= room.expiry {
 			if len(room.members) != 0 {
 				firstMember := room.members[0]
 
@@ -53,6 +55,10 @@ func getRoomForClient(client *Client) {
 		newRoom.members = append(newRoom.members, client)
 		client.room = newRoom
 		rooms = append(rooms, newRoom)
+	}
+
+	for _, message := range client.room.messages {
+		client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, message.Name, message.Text)))
 	}
 
 	printRooms()

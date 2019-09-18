@@ -2,7 +2,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -167,7 +166,7 @@ func main() {
 	}
 
 	go scheduler(time.NewTicker(time.Second * 5))
-	go resetScheduler(time.NewTicker(time.Second * 5))
+	// go resetScheduler(time.NewTicker(time.Second * 5))
 
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
@@ -261,15 +260,11 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	client.DeviceId = connect.DeviceId
 	client.Username = generation.GetRandomName()
 
-	getRoomForClient(client)
-
 	connectedClients[connect.DeviceId] = client
 
 	client.socket.WriteJSON(RegistrationResponse{0, client.Username})
 
-	for _, message := range client.room.messages {
-		client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, message.Name, message.Text)))
-	}
+	getRoomForClient(client)
 }
 
 func (client *Client) handleSend(message Message) {
