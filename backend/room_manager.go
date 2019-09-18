@@ -6,9 +6,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/gorilla/websocket"
 	"github.com/asim/quadtree"
-
+	"github.com/gorilla/websocket"
 )
 
 //type RoomManager struct {
@@ -38,10 +37,10 @@ func getRoomForClient(client *Client) {
 		//log.Printf("Found point: %s\n", point.Data().(string))
 
 		nearClient := point.Data().(*Client)
-		if (nearClient.DeviceId != client.DeviceId) {
+		if nearClient.DeviceId != client.DeviceId {
 			nearRoom := nearClient.room
 
-			if (len(nearRoom.members) < maxGroupSize) {
+			if len(nearRoom.members) < maxGroupSize {
 				client.room = nearRoom
 				nearRoom.members = append(nearRoom.members, client)
 			}
@@ -106,19 +105,23 @@ func resetRooms() {
 	// defer func() {
 	// 	mutex.Unlock()
 	// }()
+	var freeClients = make(map[int]*Client)
 
 	for _, room := range rooms {
-		curr := time.Now().UnixNano() / int64(time.Millisecond)
-		if curr > room.expiry {
-			//room is expired - reset it
-			for _, clientInRoom := range room.members {
-				freeClient(clientInRoom)
-
-				// get a new room for the client
-				getRoomForClient(clientInRoom)
-			}
-			room.expiry = time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1
+		// curr := time.Now().UnixNano() / int64(time.Millisecond)
+		// if curr > room.expiry {
+		//room is expired - reset it
+		for i, clientInRoom := range room.members {
+			freeClients[i] = clientInRoom
+			freeClient(clientInRoom)
 		}
+		// room.expiry = time.Now().UnixNano()/int64(time.Millisecond) + 1000*20*1
+		// }
+	}
+
+	for _, client := range freeClients {
+		// get a new room for the client
+		getRoomForClient(client)
 	}
 
 	printRooms()
@@ -130,6 +133,9 @@ func printRooms() {
 	fmt.Println("-------")
 	for i, room := range rooms {
 		fmt.Printf("%d people in room %d\n", len(room.members), i)
+		for _, client := range room.members {
+			fmt.Printf("%s in room %d\n", client.Username, i)
+		}
 	}
 	fmt.Println("-------")
 

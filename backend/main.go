@@ -11,8 +11,8 @@ import (
 
 	"./generation"
 
-	"github.com/gorilla/websocket"
 	"github.com/asim/quadtree"
+	"github.com/gorilla/websocket"
 )
 
 type Room struct {
@@ -55,6 +55,7 @@ const (
 
 const maxGroupSize = 3
 const maxSearchDistance = 10000
+
 // Define our message object
 type Message struct {
 	Type int             `json:"type"`
@@ -187,14 +188,14 @@ func main() {
 	centerPoint := quadtree.NewPoint(0.0, 0.0, nil)
 	halfPoint := quadtree.NewPoint(90.0, 180.0, nil)
 	boundingBox := quadtree.NewAABB(centerPoint, halfPoint)
-	
+
 	qtree = quadtree.New(boundingBox, 0, nil)
 	// for _, bot := range botClients {
 	// 	getRoomForClient(bot)
 	// }
 
 	//go scheduler(time.NewTicker(time.Second * 5))
-	//go resetScheduler(time.NewTicker(time.Second * 5))
+	go resetScheduler(time.NewTicker(time.Second * 5))
 
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
