@@ -81,7 +81,7 @@ type RoomResponse struct {
 }
 
 type RoomRecord struct {
-	ID        int          `json:"name"`
+	ID        int          `json:"roomID"`
 	Log       []string     `json:"chatlog"`
 	Locations [][2]float64 `json:"locations"`
 }
