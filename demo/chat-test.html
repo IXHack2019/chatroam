@@ -293,6 +293,7 @@
   var markerInfo = {};
   var groupMarkers = {};
   var groupCircles = {};
+  var prevWindow = null;
   var map;
 
   function initMap() {
@@ -373,7 +374,11 @@
         marker.addListener('mouseover', function() {
           var markerwindow = markerInfo[this.title];
           markerwindow.setContent(this.title + ": " + this.info);
+          if (prevWindow) {
+            prevWindow.close();
+          }
           markerwindow.open(map, this);
+          prevWindow = markerwindow;
         });
 
         groupMarkers[roomID.toString()] = marker;
