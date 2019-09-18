@@ -28,7 +28,7 @@ func main() {
 	deviceID, _ := reader.ReadString('\n')
 	deviceID = strings.Replace(deviceID, "\n", "", -1)
 
-	connectMsg := fmt.Sprintf(`{"type": 0, "data": {"deviceId": "%s", "lon": 0.0, "lat":0.0 } }`, deviceID)
+	connectMsg := fmt.Sprintf(`{"type": 0, "data": {"deviceId": "%s", "lon": -79.380688, "lat":43.652112 } }`, deviceID)
 	log.Printf("Sending message: %s\n", connectMsg)
 
 	err = c.WriteMessage(websocket.TextMessage, []byte(connectMsg))

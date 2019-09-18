@@ -50,20 +50,21 @@ type ReceivedMessage struct {
 }
 
 type RegistrationResponse struct {
-	Type     int `json:"type"`
+	Type     int    `json:"type"`
 	Username string `json:"username"`
 }
 
 type QueryResponse struct {
+	Type    int            `json:"type"`
 	Records []ClientRecord `json:"records"`
 }
 
 type ClientRecord struct {
-	Username string  `json:"username"`
-	Lon      float64 `json:"lon"`
-	Lat      float64 `json:"lat"`
-	RoomID   int     `json:"roomID"`
-	LastMsg  string  `json:"lastMsg"`
+	Name    string  `json:"name"`
+	Lon     float64 `json:"lon"`
+	Lat     float64 `json:"lat"`
+	RoomID  int     `json:"roomID"`
+	LastMsg string  `json:"lastMsg"`
 }
 
 type Client struct {
@@ -104,12 +105,12 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 	// Make sure we close the connection when the function returns
 	defer ws.Close()
 
-	var client *Client
+	var client = &Client{
+		socket: ws,
+	}
 	defer func() {
-		if client != nil {
-			log.Printf("Removing client %s from room", client.DeviceId)
-			freeClient(client)
-		}
+		log.Printf("Removing client %s from room", client.DeviceId)
+		freeClient(client)
 	}()
 
 	for {
@@ -126,27 +127,9 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 		log.Printf("Parsed message: %s type: %d", message.Data, message.Type)
 
 		if message.Type == TypeConnect {
-			client = &Client{
-				socket: ws,
-			}
-
 			client.handleConnect(message.Data)
 		} else if message.Type == TypeSend {
-			var receivedMessage ReceivedMessage
-			err := json.Unmarshal(message.Data, &receivedMessage)
-			if err != nil {
-				log.Printf("Error unmarshalling host connect: %s", err)
-				return
-			}
-
-			client.LastMsg = receivedMessage.Msg
-
-			for _, member := range client.room.members {
-				log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
-
-				member.socket.WriteJSON(message)
-			}
-
+			client.handleSend(message)
 		} else if message.Type == TypeQuery {
 			client.handleQuery()
 		}
@@ -203,18 +186,37 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	client.socket.WriteJSON(RegistrationResponse{0, client.Username})
 }
 
+func (client *Client) handleSend(message Message) {
+	var receivedMessage ReceivedMessage
+	err := json.Unmarshal(message.Data, &receivedMessage)
+	if err != nil {
+		log.Printf("Error unmarshalling host connect: %s", err)
+		return
+	}
+
+	client.LastMsg = receivedMessage.Msg
+
+	for _, member := range client.room.members {
+		log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
+
+		member.socket.WriteJSON(message)
+	}
+}
+
 func (client *Client) handleQuery() {
-	response := QueryResponse{}
+	response := QueryResponse{Type: TypeQuery}
 
 	for i, room := range rooms {
 		for _, client := range room.members {
 			response.Records = append(response.Records, ClientRecord{
-				Username: client.Username,
-				Lon:      client.Lon,
-				Lat:      client.Lat,
-				RoomID:   i,
-				LastMsg:  client.LastMsg,
+				Name:    client.Username,
+				Lon:     client.Lon,
+				Lat:     client.Lat,
+				RoomID:  i,
+				LastMsg: client.LastMsg,
 			})
 		}
 	}
+
+	client.socket.WriteJSON(response)
 }

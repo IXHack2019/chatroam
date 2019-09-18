@@ -18,6 +18,43 @@
       padding: 0;
     }
   </style>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.4.1/jquery.easing.min.js"></script>
+  <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZspwiS5iiIwwSsUT4ofXTG0uSv4-3VTI"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/vendor/markerAnimate.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marker-animate-unobtrusive/0.2.8/SlidingMarker.min.js"></script>
+  <script>
+    // Get users from server
+    let ws;
+  
+    $(document).ready(function() {
+      ws = new WebSocket("ws://localhost:8888/connect");
+      ws.onopen = function (evt) {
+        console.log("OPEN: " + evt.data);
+        var request = {
+          "type": 2
+        }
+        ws.send(JSON.stringify(request));
+      }
+      ws.onclose = function (evt) {
+          ws = null;
+      }
+      ws.onmessage = function (evt) {
+          console.log("RESPONSE: " + evt.data);
+          response = JSON.parse(evt.data);
+          if(response.type == 2) {
+            loadUsers(response.records)
+          }
+      }
+      ws.onerror = function (evt) {
+          console.log("ERROR: " + evt.data);
+      }
+
+      SlidingMarker.initializeGlobally();
+      initMap();
+    });
+    </script>
 </head>
 <body>
   <div id="map"></div>
@@ -35,11 +72,11 @@
       scale: 1,
     };
   }
+
   function getColor(groupId) {
-          if (groupId in idToColor) {
+      if (groupId in idToColor) {
               return idToColor[groupId];
-      }
-      else {
+      } else {
               var maxIteration = 100;
               for (var i = 0; i < maxIteration; i ++) {
                   var color = getRandomColor();
@@ -53,27 +90,7 @@
           return "#FFFFFF";
       }
   }
-  function getRandomColor() {
-      var letters = '0123456789ABCDEF';
-      var color = '#';
-      for (var i = 0; i < 6; i++) {  function getColor(groupId) {
-          if (groupId in idToColor) {
-              return idToColor[groupId];
-      }
-      else {
-              var maxIteration = 100;
-              for (var i = 0; i < maxIteration; i ++) {
-                  var color = getRandomColor();
-              if (!(color in presentColor)) {
-                  presentColor.push(color);
-                  idToColor[groupId] = color;
-                  return color;
-              }
-          }
-          // TODO: figure out what if no color could be matched
-          return "#FFFFFF";
-      }
-  }
+
   function getRandomColor() {
       var letters = '0123456789ABCDEF';
       var color = '#';
@@ -82,102 +99,132 @@
       }
       return color;
   }
-          color += letters[Math.floor(Math.random() * 16)];
-      }
-      return color;
-  }
-  // First, create an object containing LatLng and population for each city.
-      var users = [{
-								name: "Matt Lewis",
-								lat: 43.652375,
-								lon: -79.376576,
-								roomID: 1,
-								lastMsg: "This app is siiiick! YEET!"
-				},{
-								name: "Charles Black",
-								lat: 43.652238,
-								lon: -79.380588,
-								roomID: 2,
-								lastMsg: "Go Redskins!!!"
-				},{
-								name: "Frank Castle",
-								lat: 43.652112,
-								lon: -79.380688,
-								roomID: 3,
-								lastMsg: "It's time for punishment"
-				},{
-								name: "George Foreman",
-								lat: 43.652438,
-								lon: -79.380388,
-								roomID: 4,
-								lastMsg: "Cook a steak in 5 minutes!"
-				},{
-								name: "Gloria Raynor",
-								lat: 43.651238,
-								lon: -79.381588,
-								roomID: 5,
-								lastMsg: "Respect!"
-				},{
-								name: "Marie Curie",
-								lat: 43.651438,
-								lon: -79.381288,
-								roomID: 6,
-								lastMsg: "Yeah! Science!"
-				},{
-								name: "Johan Strutt",
-								lat: 43.653238,
-								lon: -79.384588,
-								roomID: 7,
-								lastMsg: "Howdy There"
-				},{
-								name: "Julio Jones",
-								lat: 43.653238,
-								lon: -79.382588,
-								roomID: 8,
-								lastMsg: "Matty Ice hit me up in the end zone!"
-				},{
-								name: "Adrian Peterson",
-								lat: 43.652510,
-								lon: -79.390468,
-								roomID: 8,
-								lastMsg: "Wow. An orange peanut? For me? Wow"
-				},{
-								name: "Tedd George",
-								lat: 43.649161,
-								lon: -79.375986,
-								roomID: 9,
-								lastMsg: "Anyone interested in grabbing some dim sum?"
-				},{
-								name: "Lucy Diamond",
-								lat: 43.655029,
-								lon: -79.370690,
-								roomID: 1,
-								lastMsg: "Looking for someone to go shopping with!!!"
-				},{
-								name: "Emilio Vasquez",
-								lat: 43.657715,
-								lon: -79.376414,
-								roomID: 2,
-								lastMsg: "I just saw Brad Pitt at TIFF!!!"
-				}];
 
-  // setInterval(initMap, 40000);
-  // setTimeout(function() {
-  //   location.reload();
-  // }, 10000);
+  // First, create an object containing LatLng and population for each city.
+  var users = [{
+    name: "Matt Lewis",
+    lat: 43.652375,
+    lon: -79.376576,
+    roomID: 1,
+    lastMsg: "This app is siiiick! YEET!"
+  },{
+    name: "Charles Black",
+    lat: 43.652238,
+    lon: -79.380588,
+    roomID: 2,
+    lastMsg: "Go Redskins!!!"
+  },{
+    name: "Frank Castle",
+    lat: 43.652112,
+    lon: -79.380688,
+    roomID: 3,
+    lastMsg: "It's time for punishment"
+  },{
+    name: "George Foreman",
+    lat: 43.652438,
+    lon: -79.380388,
+    roomID: 4,
+    lastMsg: "Cook a steak in 5 minutes!"
+  },{
+    name: "Gloria Raynor",
+    lat: 43.651238,
+    lon: -79.381588,
+    roomID: 5,
+    lastMsg: "Respect!"
+  },{
+    name: "Marie Curie",
+    lat: 43.651438,
+    lon: -79.381288,
+    roomID: 6,
+    lastMsg: "Yeah! Science!"
+  },{
+    name: "Johan Strutt",
+    lat: 43.653238,
+    lon: -79.384588,
+    roomID: 7,
+    lastMsg: "Howdy There"
+  },{
+    name: "Julio Jones",
+    lat: 43.653238,
+    lon: -79.382588,
+    roomID: 8,
+    lastMsg: "Matty Ice hit me up in the end zone!"
+  },{
+    name: "Adrian Peterson",
+    lat: 43.652510,
+    lon: -79.390468,
+    roomID: 8,
+    lastMsg: "Wow. An orange peanut? For me? Wow"
+  },{
+    name: "Tedd George",
+    lat: 43.649161,
+    lon: -79.375986,
+    roomID: 9,
+    lastMsg: "Anyone interested in grabbing some dim sum?"
+  },{
+    name: "Lucy Diamond",
+    lat: 43.655029,
+    lon: -79.370690,
+    roomID: 1,
+    lastMsg: "Looking for someone to go shopping with!!!"
+  },{
+    name: "Emilio Vasquez",
+    lat: 43.657715,
+    lon: -79.376414,
+    roomID: 2,
+    lastMsg: "I just saw Brad Pitt at TIFF!!!"
+  }];
+
+  function generateNewUsers() {
+    var newUsers = users;
+
+    var usernames = [];
+    for (index in users) {
+      var user = users[index];
+      usernames.push(user.name);
+    }
+
+    usernames = shuffle(usernames);
+
+    for (index in newUsers) {
+      var user = users[index];
+      user.name = usernames[index];
+    }
+
+    return newUsers;
+  }
+
+  function shuffle(a) {
+    var j, x, i;
+    for (i = a.length - 1; i > 0; i--) {
+        j = Math.floor(Math.random() * (i + 1));
+        x = a[i];
+        a[i] = a[j];
+        a[j] = x;
+    }
+    return a;
+  }
+
+  //setInterval(initMap, 40000);
+  setInterval(function() {
+    var newUsers = generateNewUsers();
+    loadUsers(newUsers);
+  }, 10000);
 
   var idToColor = {};
   var presentColor = [];
   var openWindows = [];
   var maxWindows = 3;
+  var markerInfo = {};
+  var userMarkers = {};
+  var map;
 
   function initMap() {
-
     idToColor = {};
     presentColor = [];
     
     // Create the map.
-    var map = new google.maps.Map(document.getElementById('map'), {
+    map = new google.maps.Map(document.getElementById('map'), {
       zoom: 16,
       center: {lat: 43.653, lng: -79.383},
       mapTypeId: 'terrain'
@@ -191,9 +238,16 @@
       });
     }
 
+    loadUsers(users)
+  }
+
+  function loadUsers(newUsers) {
     // Construct the circle for each value in citymap.
     // Note: We scale the area of the circle based on the population.
-    for (var user in users) {
+    var newUserMap = {};
+    for (var index in newUsers) {
+      user = newUsers[index];
+      newUserMap[user.name] = true;
       //var idx = users[user].roomID % 8;
       // var marker = new google.maps.Marker({
       //   icon: getIcon(getColor(users[user].roomID)),
@@ -207,30 +261,57 @@
       // marker.addListener('mouseover', function() {
       //   infowindow.open(map, this);
       // });
-      var infowindow = new google.maps.InfoWindow();
 
-      var marker = new google.maps.Marker({
-        icon: getIcon(getColor(users[user].roomID)),
-        position: { lat: users[user].lat, lng: users[user].lon},
-        map: map,
-        animation: google.maps.Animation.DROP,
-        info: users[user].lastMsg,
-        title: users[user].name
-      });
+      if (!(user.name in userMarkers)) {
 
-      marker.addListener('mouseover', function() {
-        if (openWindows.length >= maxWindows) {
-          infowindow.close(map, openWindows.pop());
-        }
-        infowindow.open(map, this);
-        openWindows.push(infowindow);
-        infowindow.setContent(this.info);
-      });
+        var marker = new google.maps.Marker({
+          icon: getIcon(getColor(user.roomID)),
+          position: { lat: user.lat, lng: user.lon },
+          map: map,
+          animation: google.maps.Animation.DROP,
+          info: user.lastMsg,
+          title: user.name
+        });
+
+        var infowindow = new google.maps.InfoWindow({
+          Content: user.name + ": " + user.lastMsg
+        });
+
+        markerInfo[user.name] = infowindow;
+        marker.addListener('mouseover', function() {
+          var markerwindow = markerInfo[this.title];
+          markerwindow.setContent(this.title + ": " + this.info);
+          markerwindow.open(map, this);
+        });
+
+        userMarkers[user.name] = marker
+      } else {
+        var marker = userMarkers[user.name];
+        marker.setOptions({
+          icon: getIcon(getColor(user.roomID)),
+          position: { lat: user.lat, lng: user.lon },
+          info: user.lastMsg,
+        });
+
+        var infowindow = markerInfo[user.name];
+        setTimeout(function() {
+          var markerwindow = markerInfo[this.title];
+          markerwindow.setContent(this.title + ": " + this.info);
+        }.bind(marker), 1000);
+      }
     }
+
+    var newMarkers = {};
+    for (var user in userMarkers) {
+      marker = userMarkers[user];
+      if (!(marker.getTitle() in newUserMap)) {
+        marker.setMap(null);
+      } else {
+        newMarkers[marker.getTitle()] = marker;
+      }
+    }
+    userMarkers = newMarkers;
   }
-  </script>
-  <script async defer
-  src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZspwiS5iiIwwSsUT4ofXTG0uSv4-3VTI&callback=initMap">
   </script>
 </body>
 </html>
