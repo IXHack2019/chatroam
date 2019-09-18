@@ -157,9 +157,9 @@ var botClients = []*Client{
 }
 
 func main() {
-	for _, bot := range botClients {
-		getRoomForClient(bot)
-	}
+	// for _, bot := range botClients {
+	// 	getRoomForClient(bot)
+	// }
 
 	go scheduler(time.NewTicker(time.Second * 5))
 
@@ -230,44 +230,13 @@ func (client *Client) handleConnect(data json.RawMessage) {
 		log.Printf("Error unmarshalling host connect: %s", err)
 		return
 	}
-
-	getRoomForClient(client)
-
-	// minDistance := float64(0)
-	// var minRoom *Room = nil
-	// for _, room := range rooms { // big performance issue here if number of rooms is large, but this is a hackathon
-
-	// 	if len(room.members) < maxGroupSize { // TODO race condition here lul
-
-	// 		firstMember := room.members[0]
-
-	// 		distance := distanceInKmBetweenEarthCoordinates(firstMember.Lat, firstMember.Lon, client.Lat, client.Lon)
-
-	// 		log.Printf("Distance: %f", distance)
-
-	// 		if distance < minDistance {
-	// 			minDistance = distance
-	// 			minRoom = room
-	// 		}
-	// 	}
-	// }
-
-	// if minRoom != nil {
-	// 	minRoom.members = append(minRoom.members, client)
-	// 	client.room = minRoom
-	// }
-
-	// if client.room == nil {
-	// 	newRoom := &Room{
-	// 		members: []*Client{client},
-	// 	}
-	// 	rooms = append(rooms, newRoom)
-	// 	client.room = newRoom
-	// }
 	client.Lat = connect.Lat
 	client.Lon = connect.Lon
 	client.DeviceId = connect.DeviceId
 	client.Username = generation.GetRandomName()
+
+	getRoomForClient(client)
+
 	connectedClients[connect.DeviceId] = client
 
 	client.socket.WriteJSON(RegistrationResponse{0, client.Username})

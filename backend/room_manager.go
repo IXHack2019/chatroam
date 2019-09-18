@@ -4,19 +4,36 @@ import (
 	"fmt"
 	"sync"
 	"time"
+	"log"
+	"math"
 )
 
 var mutex = &sync.Mutex{}
 
 func getRoomForClient(client *Client) {
-
-	for _, room := range rooms {
+	minDistance := math.MaxFloat64
+	var minRoom *Room = nil
+	
+	for i, room := range rooms {
 		mutex.Lock()
 		if len(room.members) < maxGroupSize {
-			client.room = room
-			room.members = append(room.members, client)
+			firstMember := room.members[0]
+
+			distance := distanceInKmBetweenEarthCoordinates(firstMember.Lat, firstMember.Lon, client.Lat, client.Lon)
+
+			log.Printf("Room %d lat1 %f lon1 %f lat2 %f lon2 %f Distance: %f\n",i, firstMember.Lat,firstMember.Lon,client.Lat, client.Lon,distance)
+
+			if distance < minDistance {
+				minDistance = distance
+				minRoom = room
+			}
 		}
 		mutex.Unlock()
+	}
+
+	if minRoom != nil {
+		minRoom.members = append(minRoom.members, client)
+		client.room = minRoom
 	}
 
 	//no room was available - create new room
