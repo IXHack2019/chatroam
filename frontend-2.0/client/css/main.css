@@ -29,11 +29,6 @@ body {
 	box-shadow: 5px 5px 10px #ccc5d6;
 }
 
-.message.bubble.personal {
-	justify-self: end;
-	background-color: #9693cf;
-
-}
 
 .message.bubble .username, .message.bubble .text {
 	max-width: 100%;
@@ -45,6 +40,16 @@ body {
 }
 .message.bubble .text {
 	color: white;
+}
+
+
+.message.bubble.personal {
+	justify-self: end;
+	background-color: white;
+}
+
+.message.bubble.personal .text {
+	color: black !important;
 }
 
 #input-box {
