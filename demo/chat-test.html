@@ -301,7 +301,7 @@
     
     // Create the map.
     map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 16,
+      zoom: 14,
       center: {lat: 43.653, lng: -79.383},
       mapTypeId: 'terrain',
       mapTypeControl: false,
@@ -332,6 +332,9 @@
       var roomID = newGroups[index].roomID;
       var coordinates = newGroups[index].locations;
 
+      if (coordinates.length < 2) {
+        continue;
+      }
       var groupCenterObj = getGroupCenter(coordinates);
       var groupLat = groupCenterObj.midpoint[0];
       var groupLon = groupCenterObj.midpoint[1];
@@ -398,7 +401,7 @@
     var newMarkers = {};
     for (var index in groupMarkers) {
       marker = groupMarkers[index];
-      if (!(marker.getTitle() in newGroupMap[index])) {
+      if (!(marker.getTitle() in newGroupMap)) {
         marker.setMap(null);
       } else {
         newMarkers[marker.getTitle()] = marker;
