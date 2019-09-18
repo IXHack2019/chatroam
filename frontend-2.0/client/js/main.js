@@ -14,7 +14,7 @@ $(document).ready(function() {
 });
 
 function buildConnection() {
-   ws = new WebSocket("ws://dumtard.com:80/connect");
+   ws = new WebSocket("wss://dumtard.com/connect");
    ws.onopen = function (evt) {
       connect();
    }
