@@ -11,8 +11,8 @@
         computed: {
             messages() {
                 return [ 
-                    {username: "Chat", message:"Roam", timestamp: 1234567854321},
-                    {username: "Chats", message:"Roam", timestamp: 1234567854321} 
+                    {username: "jayrsawal", message:"wtf", timestamp: 1234567854321},
+                    {username: "dumtard", message:"is going on!!!!", timestamp: 1234567854321} 
                 ];
             }
         }

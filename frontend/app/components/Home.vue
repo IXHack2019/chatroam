@@ -10,16 +10,19 @@
 <script>
     import Board from "./Board";
     import Input from './Input';
-    require('nativescript-websockets');
+    // require('nativescript-websockets');
     export default {
         components: {
             Board, Input
         }
     };
-    var mySocket = new WebSocket("ws://localhost:8080");
-    mySocket.on('open', function(socket) {
-        console.log("connected!");
-    })
+    // var mySocket = new WebSocket("ws://dumtard.com:8080");
+    // mySocket.on('open', function(socket) {
+    //     alert("connected!");
+    // })
+    // mySocket.on('error', function(socket) {
+    //     alert("error!");
+    // })
 </script>
 
 <style scoped lang="scss">

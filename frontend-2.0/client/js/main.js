@@ -21,7 +21,6 @@ $(document).ready(function() {
    ws.onmessage = function (evt) {
       console.log("RESPONSE: " + evt.data);
       response = JSON.parse(evt.data);
-      console.log(response.type);
       switch(response.type) {
          case 1: 
             writeMessage(response.data, response.data.deviceID == local_device_id ? true : false);
@@ -96,7 +95,7 @@ function writeMessage(data, personal) {
       $msg.addClass("personal");
    }
    $("#board").append($msg);
-
+   window.scrollTo(0,document.body.scrollHeight);
 }
 
 function writePersonalMessage() {

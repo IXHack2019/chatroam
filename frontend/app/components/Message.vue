@@ -1,8 +1,8 @@
 <template>
-    <FlexboxLayout backgroundColor="green">
-        <Label :text="username" width="100%" height="50" />
-        <Label :text="message" width="100%" height="50" />
-    </FlexboxLayout>
+    <StackLayout class="bubble" backgroundColor="#C2CAE8">
+        <Label class="user" :text="username"/>
+        <Label class="text" :text="message"/>
+    </StackLayout>
 </template>
 
 <script>
@@ -26,5 +26,23 @@
 
     .info {
         font-size: 20;
+    }
+    .bubble {
+        font-size: 20px;
+        color: black;
+        background-color: gray;
+        margin-top: 25px;
+        max-width: 80%;
+        padding: 15px;
+        .personal {
+            text-align: right;
+        }
+        .user {
+            align-self: center;
+            color: $theme-primary;
+        }
+        .text {
+            color: $theme-secondary;
+        }
     }
 </style>
