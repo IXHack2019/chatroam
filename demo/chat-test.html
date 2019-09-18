@@ -33,7 +33,7 @@
       ws.onopen = function (evt) {
         console.log("OPEN: " + evt.data);
         var request = {
-          "type": 2
+          "type": 3
         }
         ws.send(JSON.stringify(request));
       }
@@ -43,7 +43,7 @@
       ws.onmessage = function (evt) {
           console.log("RESPONSE: " + evt.data);
           response = JSON.parse(evt.data);
-          if(response.type == 2) {
+          if(response.type == 3) {
             loadGroups(response.records)
           }
       }
@@ -277,14 +277,14 @@
       }
 
   //setInterval(initMap, 40000);
- // setInterval(function() {
- //   // var newGroups = generateNewGroups();
- //   // loadGroups(newGroups);
- //   var request = {
- //     "type": 2
- //   }
- //   ws.send(JSON.stringify(request));
- // }, 10000);
+  setInterval(function() {
+    //var newGroups = generateNewGroups();
+    //loadGroups(newGroups);
+    var request = {
+      "type": 3
+    }
+    ws.send(JSON.stringify(request));
+  }, 10000);
 
   var idToColor = {};
   var presentColor = [];
@@ -292,6 +292,7 @@
   var maxWindows = 3;
   var markerInfo = {};
   var groupMarkers = {};
+  var groupCircles = {};
   var map;
 
   function initMap() {
@@ -319,7 +320,7 @@
       });
     }
 
-    loadGroups(groupData)
+    //loadGroups(groupData)
   }
 
   function loadGroups(newGroups) {
@@ -372,14 +373,19 @@
           markerwindow.open(map, this);
         });
 
-        groupMarkers[groupObj.name] = marker
+        groupMarkers[roomID.toString()] = marker;
+        groupCircles[roomID.toString()] = groupCircle;
       } else {
-        var marker = groupMarkers[roomID];
+        var marker = groupMarkers[roomID.toString()];
         marker.setOptions({
           icon: getIcon(getColor(roomID)),
           position: { lat: groupLat, lng: groupLon },
           info: groupChatLog
         });
+
+        var circle = groupCircles[roomID.toString()];
+        circle.setCenter({ lat: groupLat, lng: groupLon });
+        circle.setRadius(groupRadius * 100000);
 
         var infowindow = markerInfo[roomID.toString()];
         setTimeout(function() {
@@ -392,7 +398,7 @@
     var newMarkers = {};
     for (var index in groupMarkers) {
       marker = groupMarkers[index];
-      if (!(marker.getTitle() in newGroupMap)) {
+      if (!(marker.getTitle() in newGroupMap[index])) {
         marker.setMap(null);
       } else {
         newMarkers[marker.getTitle()] = marker;
