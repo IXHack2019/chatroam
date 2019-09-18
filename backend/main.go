@@ -160,6 +160,7 @@ func main() {
 	}
 
 	go scheduler(time.NewTicker(time.Second * 5))
+	go resetScheduler(time.NewTicker(time.Second * 5))
 
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
@@ -169,6 +170,12 @@ func main() {
 func scheduler(tick *time.Ticker) {
 	for range tick.C {
 		updateTestClients()
+	}
+}
+
+func resetScheduler(tick *time.Ticker) {
+	for range tick.C {
+		resetRooms()
 	}
 }
 
