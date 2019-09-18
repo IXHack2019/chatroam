@@ -302,8 +302,8 @@
 
   //setInterval(initMap, 40000);
   setInterval(function() {
-    // var newUsers = generateNewUsers();
-    // loadUsers(newUsers);
+    //var newUsers = generateNewUsers();
+    //loadUsers(newUsers);
     var request = {
       "type": 2
     }
@@ -353,9 +353,6 @@
     // Construct the circle for each value in citymap.
     // Note: We scale the area of the circle based on the population.
     var newUserMap = {};
-    while (openWindows.length > 0) {
-      openWindows.pop().close()
-    }
 
     idToUsers = {}; // Clear the previous roomID map
     for (var index in newUsers) {
