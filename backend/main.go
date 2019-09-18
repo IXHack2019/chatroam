@@ -27,6 +27,7 @@ var upgrader = websocket.Upgrader{
 const (
 	TypeConnect = iota
 	TypeSend
+	TypeQuery
 )
 
 const maxGroupSize = 3
@@ -37,9 +38,9 @@ type Message struct {
 	Data json.RawMessage `json:"data"`
 }
 type Connect struct {
-	DeviceId string `json:"deviceId"`
-	Lon float64
-	Lat float64
+	DeviceId string  `json:"deviceId"`
+	Lon      float64 `json:"lon"`
+	Lat      float64 `json:"lat"`
 }
 
 type ReceivedMessage struct {
@@ -49,16 +50,30 @@ type ReceivedMessage struct {
 }
 
 type RegistrationResponse struct {
-	Type int
+	Type     int
 	Username string `json:"username"`
+}
+
+type QueryResponse struct {
+	Records []ClientRecord `json:"records"`
+}
+
+type ClientRecord struct {
+	Username string  `json:"username"`
+	Lon      float64 `json:"lon"`
+	Lat      float64 `json:"lat"`
+	RoomID   int     `json:"roomID"`
+	LastMsg  string  `json:"lastMsg"`
 }
 
 type Client struct {
 	socket   *websocket.Conn
 	room     *Room
 	DeviceId string
-	Lon float64
-	Lat float64
+	Username string
+	Lon      float64
+	Lat      float64
+	LastMsg  string
 }
 
 var connectedClients = make(map[string]*Client)
@@ -100,6 +115,7 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 	for {
 		var message Message
 		err = ws.ReadJSON(&message)
+
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseNormalClosure, websocket.CloseGoingAway, websocket.CloseAbnormalClosure) {
 				log.Printf("Error unmarshalling message: %s", err)
@@ -115,31 +131,24 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			}
 
 			client.handleConnect(message.Data)
-			ws.WriteJSON(RegistrationResponse{0, getRandomName()})
-
 		} else if message.Type == TypeSend {
-			log.Printf("TypeSend\n")
-
 			var receivedMessage ReceivedMessage
 			err := json.Unmarshal(message.Data, &receivedMessage)
 			if err != nil {
 				log.Printf("Error unmarshalling host connect: %s", err)
 				return
 			}
-			log.Printf("101\n")
-			log.Println(receivedMessage.DeviceId)
 
-			client := connectedClients[receivedMessage.DeviceId]
-			room := client.room
+			client.LastMsg = receivedMessage.Msg
 
-			for _, member := range room.members {
-
-				log.Printf("%+v\n", member)
+			for _, member := range client.room.members {
 				log.Printf("Writing to deviceId %s's socket: %s", member.DeviceId, receivedMessage.Msg)
 
 				member.socket.WriteJSON(message)
 			}
 
+		} else if message.Type == TypeQuery {
+			client.handleQuery()
 		}
 	}
 }
@@ -159,7 +168,7 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	// for _, room := range rooms { // big performance issue here if number of rooms is large, but this is a hackathon
 
 	// 	if len(room.members) < maxGroupSize { // TODO race condition here lul
-			
+
 	// 		firstMember := room.members[0]
 
 	// 		distance := distanceInKmBetweenEarthCoordinates(firstMember.Lat, firstMember.Lon, client.Lat, client.Lon)
@@ -188,51 +197,24 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	client.Lat = connect.Lat
 	client.Lon = connect.Lon
 	client.DeviceId = connect.DeviceId
+	client.Username = getRandomName()
 	connectedClients[connect.DeviceId] = client
+
+	client.socket.WriteJSON(RegistrationResponse{0, client.Username})
 }
 
+func (client *Client) handleQuery() {
+	response := QueryResponse{}
 
-
-// func handleSend(client *Client, data json.RawMessage) {
-
-// }
-// func handleConnections(w http.ResponseWriter, r *http.Request) {
-// 	// Upgrade initial GET request to a websocket
-// 	ws, err := upgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	// Make sure we close the connection when the function returns
-// 	defer ws.Close()
-
-// 	// Register our new client
-// 	clients[ws] = true
-// 	for {
-// 		var msg Message
-// 		// Read in a new message as JSON and map it to a Message object
-// 		err := ws.ReadJSON(&msg)
-// 		if err != nil {
-// 			log.Printf("error: %v", err)
-// 			delete(clients, ws)
-// 			break
-// 		}
-// 		// Send the newly received message to the broadcast channel
-// 		broadcast <- msg
-// 	}
-// }
-
-// func handleMessages() {
-// 	for {
-// 		// Grab the next message from the broadcast channel
-// 		msg := <-broadcast
-// 		// Send it out to every client that is currently connected
-// 		for client := range clients {
-// 			err := client.WriteJSON(msg)
-// 			if err != nil {
-// 				log.Printf("error: %v", err)
-// 				client.Close()
-// 				delete(clients, client)
-// 			}
-// 		}
-// 	}
-// }
+	for i, room := range rooms {
+		for _, client := range room.members {
+			response.Records = append(response.Records, ClientRecord{
+				Username: client.Username,
+				Lon:      client.Lon,
+				Lat:      client.Lat,
+				RoomID:   i,
+				LastMsg:  client.LastMsg,
+			})
+		}
+	}
+}
