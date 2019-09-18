@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+    <meta charset="utf-8">
+    <title>Circles</title>
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map"></div>
+				<script>
+      // This example creates circles on the map, representing populations in North
+      // America.
+			var idToColor = {}
+			var presentColor = []
+
+			function getIcon(color) {
+					return {
+							path: 'M 0,0 C -2,-20 -10,-22 -10,-30 A 10,10 0 1,1 10,-30 C 10,-22 2,-20 0,0 z M -2,-30 a 2,2 0 1,1 4,0 2,2 0 1,1 -4,0',
+							fillColor: color,
+							fillOpacity: 1,
+							strokeColor: '#000',
+							strokeWeight: 2,
+							scale: 1,
+				 };
+			}
+
+			function getColor(groupId) {
+					if (groupId in idToColor) {
+						return idToColor[groupId];
+				}
+				else {
+						var maxIteration = 100;
+						for (var i = 0; i < maxIteration; i ++) {
+							var color = getRandomColor();
+						if (!(color in presentColor)) {
+								presentColor.push(color);
+							idToColor[groupId] = color;
+							return color;
+						}
+					}
+					// TODO: figure out what if no color could be matched
+					return "#FFFFFF";
+				}
+			}
+
+			function getRandomColor() {
+				var letters = '0123456789ABCDEF';
+				var color = '#';
+				for (var i = 0; i < 6; i++) {
+					color += letters[Math.floor(Math.random() * 16)];
+				}
+				return color;
+			}
+
+      function formatChatLogs(messages) {
+        var output = '';
+        for (var index in messages) {
+          output += messages[index] + '<br><br>';
+        }
+        return output;
+      }
+
+      function getGroupCenter(coordinates) {
+        var maxDistance = 0;
+        var maxIndex;
+        var distancePairs = [];
+        for (var index in coordinates) {
+          var x1 = coordinates[index][0];
+          var y1 = coordinates[index][1];
+          for (var idx in coordinates) {
+            if (idx == index) continue;
+            var x2 = coordinates[idx][0];
+            var y2 = coordinates[idx][1];
+            var dist = Math.sqrt(Math.pow(x2 - x1, 2) + Math.pow(y2 - y1, 2));
+            var pairObj = {
+              distance: dist,
+              midpoint: [(x1 + x2)/2, (y1 + y2)/2]
+            };
+
+            distancePairs.push(pairObj);
+          }
+        }
+        for (var index in distancePairs) {
+          var dist = distancePairs[index].distance;
+          if (dist > maxDistance) {
+            maxDistance = dist;
+            maxIndex = index;
+          }
+        }
+				var midpoint = distancePairs[maxIndex].midpoint
+				var distance = distancePairs[maxIndex].distance;
+        return { radius: distance / 2, midpoint: midpoint };
+      }
+
+      var chatData = [{
+         roomID: 1,
+         chatlog: ['Hey who knows a good ice cream spot?', 'Ohhh I love ice cream!!! I also am looking for a good spot', 'There is a great place near Dundas square, check it out!'],
+         locations: [[43.853, -79.383], [43.453, -79.383], [43.653, -79.183], [43.653, -79.583]]
+			},{
+				 roomID: 2,
+				 chatlog: ["Dang I'm really hungry!", "oooohhhh me tooooo!!!!", "Let's go grab some sushi!!!"],
+         locations: [[43.753, -79.483], [43.553, -79.483], [43.653, -79.583], [43.653, -79.383]]
+      }];
+
+      // First, create an object containing LatLng and population for each city.
+      function initMap() {
+        // Create the map.
+        var map = new google.maps.Map(document.getElementById('map'), {
+          zoom: 10,
+          center: {lat: 43.653, lng: -79.383},
+          mapTypeId: 'terrain'
+        });
+
+
+        // Construct the circle for each value in citymap.
+        // Note: We scale the area of the circle based on the population.
+        for (var index in chatData) {
+          var roomID = chatData[index].roomID;
+          var coordinates = chatData[index].locations;
+
+          var groupCenterObj = getGroupCenter(coordinates);
+          var groupLat = groupCenterObj.midpoint[0];
+          var groupLon = groupCenterObj.midpoint[1];
+					var groupRadius = groupCenterObj.radius;
+
+				  var infowindow = new google.maps.InfoWindow();
+          var chatLog = formatChatLogs(chatData[index].chatlog);
+
+					var groupColor = getColor(roomID);
+					var marker = new google.maps.Marker({
+					  icon: getIcon(groupColor),
+						position: { lat: groupLat, lng: groupLon},
+						map: map,
+						animation: google.maps.Animation.DROP,
+						info: chatLog,
+						title: 'Chat Room: ' + roomID
+					});
+
+					console.log("Group radius: " + groupRadius);
+
+					var cityCircle = new google.maps.Circle({
+            strokeColor: groupColor,
+            strokeOpacity: 0.8,
+            strokeWeight: 2,
+            fillColor: groupColor,
+            fillOpacity: 0.35,
+            map: map,
+            center: {lat: groupLat, lng: groupLon},
+            radius: groupRadius * 100000
+          });
+
+				  infowindow.setContent(marker.info);
+					infowindow.open(map, marker);
+        }
+      }
+		</script>
+    <script async="" defer="" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyBZspwiS5iiIwwSsUT4ofXTG0uSv4-3VTI&amp;callback=initMap">
+    </script>
+  </body>
+</html>

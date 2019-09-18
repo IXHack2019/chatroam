@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"math/rand"
 	"net/http"
@@ -13,8 +14,14 @@ import (
 )
 
 type Room struct {
-	members []*Client
-	expiry  int64
+	members  []*Client
+	expiry   int64
+	messages []RoomMessage
+}
+
+type RoomMessage struct {
+	Name string
+	Text string
 }
 
 // Configure the upgrader
@@ -146,12 +153,6 @@ var botClients = []*Client{
 		Lon:      -79.370690,
 		LastMsg:  "Looking for someone to go shopping with!!!",
 	},
-	&Client{
-		Username: "Emilio Vasquez",
-		Lat:      43.657715,
-		Lon:      -79.376414,
-		LastMsg:  "I just saw Brad Pitt at TIFF!!!",
-	},
 }
 
 func main() {
@@ -160,7 +161,7 @@ func main() {
 	}
 
 	go scheduler(time.NewTicker(time.Second * 5))
-	go resetScheduler(time.NewTicker(time.Second * 5))
+	// go resetScheduler(time.NewTicker(time.Second * 5))
 
 	log.SetFlags(log.LstdFlags)
 	http.HandleFunc("/connect", handleMessage)
@@ -191,6 +192,16 @@ func updateTestClients() {
 
 	for _, testClient := range botClients {
 		testClient.LastMsg = generation.GetRandomMessage()
+		for _, client := range testClient.room.members {
+			if client.socket != nil {
+				client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, testClient.Username, testClient.LastMsg)))
+			}
+		}
+		testClient.room.messages = append(testClient.room.messages, RoomMessage{
+			Name: testClient.Username,
+			Text: testClient.LastMsg,
+		})
+
 		offset := float64(rand.Intn(100))*0.00001 - 0.0005
 		testClient.Lat += offset
 		offset = float64(rand.Intn(100))*0.00001 - 0.0005
@@ -254,11 +265,11 @@ func (client *Client) handleConnect(data json.RawMessage) {
 	client.DeviceId = connect.DeviceId
 	client.Username = generation.GetRandomName()
 
-	getRoomForClient(client)
-
 	connectedClients[connect.DeviceId] = client
 
 	client.socket.WriteJSON(RegistrationResponse{0, client.Username})
+
+	getRoomForClient(client)
 }
 
 func (client *Client) handleSend(message Message) {
@@ -270,6 +281,10 @@ func (client *Client) handleSend(message Message) {
 	}
 
 	client.LastMsg = receivedMessage.Msg
+	client.room.messages = append(client.room.messages, RoomMessage{
+		Name: client.Username,
+		Text: receivedMessage.Msg,
+	})
 
 	for _, member := range client.room.members {
 		if member.socket != nil {
