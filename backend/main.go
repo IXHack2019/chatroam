@@ -243,7 +243,8 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 	// Upgrade initial GET request to a websocket
 	ws, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		log.Fatal(err)
+		log.Printf("%s", err)
+		return
 	}
 	// Make sure we close the connection when the function returns
 	defer ws.Close()

@@ -2,13 +2,80 @@ let local_device_id;
 let local_username;
 let ws;
 let connecting;
+let shifted;
+
+$.fn.textWidth = function(){
+    var calc = '<span style="display:none">' + $(this).text() + '</span>';
+    $('body').append(calc);
+    var width = $('body').find('span:last').width();
+    $('body').find('span:last').remove();
+   return width;
+};
+
+$.fn.marquee = function(args) {
+   var that = $(this);
+   var textWidth = that.textWidth(),
+       offset = that.width(),
+       width = offset,
+       css = {
+           'text-indent' : that.css('text-indent'),
+           'overflow' : that.css('overflow'),
+           'white-space' : that.css('white-space')
+       },
+       marqueeCss = {
+           'text-indent' : width,
+           'overflow' : 'hidden',
+           'white-space' : 'nowrap'
+       },
+       args = $.extend(true, { count: -1, speed: 1e1, leftToRight: false }, args),
+       i = 0,
+       stop = textWidth*-1,
+       dfd = $.Deferred();
+
+   function go() {
+       if(!that.length) return dfd.reject();
+       if(width == stop) {
+           i++;
+           if(i == args.count) {
+               that.css(css);
+               return dfd.resolve();
+           }
+           if(args.leftToRight) {
+               width = textWidth*-1;
+           } else {
+               width = offset;
+           }
+       }
+       that.css('text-indent', width + 'px');
+       if(args.leftToRight) {
+           width++;
+       } else {
+           width--;
+       }
+       setTimeout(go, args.speed);
+   };
+   if(args.leftToRight) {
+       width = textWidth*-1;
+       width++;
+       stop = offset;
+   } else {
+       width--;            
+   }
+   that.css(marqueeCss);
+   go();
+   return dfd.promise();
+};
 
 $(document).ready(function() {
    local_device_id = parseInt(Math.random().toString().replace(".")).toString()+Date.now().toString();
    buildConnection();
-   $(document).on('keypress',function(e) {
+   $(document).on('keyup keydown',function(e) {
       if(e.which == 13) {
-         writePersonalMessage();
+         if(!e.shiftKey) {
+            writePersonalMessage();
+         } else {
+            advertise();
+         }
       }
    });
 });
@@ -147,6 +214,7 @@ function writePersonalMessage() {
 }
 
 function idToRGB(id, alpha=1) {
+   if(id === undefined) return "rgba(100,100,100,0.2)"
    return hexToRGB(intToRGB(parseInt(id)), alpha);
 }
 
@@ -167,4 +235,14 @@ function hexToRGB(hex, alpha=1.0) {
   var result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result ? "rgba(" + parseInt(result[1],16) + ", " + parseInt(result[2], 16) 
       + ", " + parseInt(result[3], 16) + ", " + alpha + ");" : "#9693cf"
+}
+
+function advertise(duration=5000) {
+   let text = $("#text-box").val();
+   if(text == "") return;
+   $("#megaphone span").html(text);
+   $("#megaphone").addClass("active");
+   setTimeout(function() {
+      $("#megaphone").removeClass("active");
+   }, duration)
 }
