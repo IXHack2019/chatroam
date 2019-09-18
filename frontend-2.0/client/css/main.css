@@ -26,18 +26,17 @@ body {
 .message.bubble {
     padding: 10px;
     /*background-color: #EAEDED;*/
-    border-radius: 5px;
+    border-radius: 8px;
     border-color: black;
     max-width: 100%;
-    border-radius: 25px;
     background-color: #D6EAF8;
+    box-shadow: 2px 2px 10px #EAEDED;
 }
 
 
 .username {
     background-color: #ffffff;
-    border-radius: 5px;
-    font-size: 1em;
+    font-size: 1.5em;
     padding: 5px;
     font-style: italic;
 }
@@ -76,7 +75,7 @@ body {
 }
 
 .message.bubble .text {
-    font-size: 1.5em;
+    font-size: 2.5em;
     width: 100%;
 }
 
@@ -90,7 +89,7 @@ body {
   text-align: center;
   text-decoration: none;
   display: inline-block;
-  font-size: 16px;
+  font-size: 2.5em;
   margin: 4px 2px;
   cursor: pointer;
 }
@@ -99,7 +98,7 @@ body {
 .message.bubble.personal {
     justify-self: end;
     width: 100%;
-    border-radius: 25px;
+    border-radius: 8px;
 }
 
 /*.message.bubble.personal .text {
@@ -111,7 +110,7 @@ body {
     bottom: 0;
     width: 100%;
     display: grid;
-    grid-template-columns: 9fr 1fr;
+    grid-template-columns: 8fr 2fr;
     grid-gap: 15px;
     padding: 10px;
     min-height: 10%;
@@ -120,18 +119,18 @@ body {
 
 
 #text-box {
-    border-radius: 25px;
+    border-radius: 8px;
 	border: 2px solid #EAEDED;
 	padding: 23px;
 	width: 100%;
 	height: 100%;
-	font-size: 100%;
+	font-size: 2.5em;
 	outline: none;
 }
 
 #text-box:focus {
 	border-color: #3498DB;
-	box-shadow: 5px 5px 10px #EAEDED;
+	box-shadow: 2px 2px 10px #EAEDED;
 }
 /*$theme-primary: #8789C0;
 $theme-secondary: #111D4A;
