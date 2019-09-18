@@ -197,6 +197,10 @@ func updateTestClients() {
 				client.socket.WriteMessage(websocket.TextMessage, []byte(fmt.Sprintf(`{"type": 1, "data": {"username": "%s", "msg":"%s" } }`, testClient.Username, testClient.LastMsg)))
 			}
 		}
+		testClient.room.messages = append(testClient.room.messages, RoomMessage{
+			Name: testClient.Username,
+			Text: testClient.LastMsg,
+		})
 
 		offset := float64(rand.Intn(100))*0.00001 - 0.0005
 		testClient.Lat += offset
