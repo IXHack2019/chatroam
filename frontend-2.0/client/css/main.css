@@ -6,13 +6,13 @@ body {
 }
 
 #board-container {
-	background-color: #C2CAE8;
+	background-color: #ebeefc;
 	padding: 15px;
 	padding-bottom: 50px;
 }
 
 #board {
-	max-width: 80%;
+	max-width: 700px;
 	margin: 0 auto;
 	display: grid;
 	grid-gap: 5px;
@@ -20,20 +20,23 @@ body {
 }
 
 .message.bubble {
-	display: grid;
-	grid-template-columns: 1fr;
-	grid-gap:; 15px;
 	padding: 10px;
 	background-color: #8789C0;
 	border-radius: 5px;
+	min-width: 30%;
 	max-width: 80%;
-	align-self: start;
+	justify-self: start;
+	box-shadow: 5px 5px 10px #ccc5d6;
 }
 
 .message.bubble.personal {
 	justify-self: end;
 	background-color: #9693cf;
 
+}
+
+.message.bubble .username, .message.bubble .text {
+	max-width: 100%;
 }
 
 .message.bubble .username {
@@ -50,10 +53,16 @@ body {
 	width: 100%;
 	display: grid;
 	grid-template-columns: 9fr 1fr;
+	grid-gap: 15px;
+	padding: 15px;
+	min-height: 75px;
+	background-color: #ccc5d6;
 }
 
 /*$theme-primary: #8789C0;
 $theme-secondary: #111D4A;
 $theme-accent: #45F0DF;
 $theme-light: #C2CAE8;
-$theme-dark: #8380B6;*/
+$theme-lighter: #ebeefc;
+$theme-dark: #8380B6;
+$theme-neutral: #ccc5d6;*/

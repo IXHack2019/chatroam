@@ -1,13 +1,16 @@
-const localuser = "jayrsawal";
+let local_device_id;
+let local_username;
 let ws;
 
 $(document).ready(function() {
+   local_device_id = parseInt(Math.random().toString().replace(".")).toString()+Date.now().toString();
+   local_username = "CHATROAM";
    ws = new WebSocket("ws://localhost:8888/connect");
    ws.onopen = function (evt) {
       var request = {
          "type": 0,
          "data": {
-            "deviceID": localuser
+            "deviceID": local_device_id
          }
       }
       sendRequestWithPosition(request);
@@ -18,9 +21,16 @@ $(document).ready(function() {
    ws.onmessage = function (evt) {
       console.log("RESPONSE: " + evt.data);
       response = JSON.parse(evt.data);
-      if(response.type == 1) {
-        writeMessage(response.data, response.data.username == localuser ? true : false);
-      }
+      console.log(response.type);
+      switch(response.type) {
+         case 1: 
+            writeMessage(response.data, response.data.deviceID == local_device_id ? true : false);
+            break;
+         case 0:
+            local_username = response.username;
+            console.log("New username set: " + local_username);
+            break;
+      } 
    }
    ws.onerror = function (evt) {
       console.log("ERROR: " + evt.data);
@@ -47,14 +57,40 @@ function getPosition() {
    return new Promise(function(resolve, reject) {
       navigator.geolocation.getCurrentPosition(function (position) {
          resolve([position.coords.latitude, position.coords.longitude]);
-      });
+      }, throwPositionError);
    });
+}
+
+function throwPositionError(error) {
+  switch(error.code) {
+    case error.PERMISSION_DENIED:
+      console.log("User denied the request for Geolocation.");
+      break;
+    case error.POSITION_UNAVAILABLE:
+      console.log("Location information is unavailable.");
+      break;
+    case error.TIMEOUT:
+      console.log("The request to get user location timed out.");
+      break;
+    case error.UNKNOWN_ERROR:
+      console.log("An unknown error occurred.");
+      break;
+  }
+   ws.onopen = function (evt) {
+      var request = {
+         "type": 0,
+         "data": {
+            "deviceID": local_device_id
+         }
+      }
+      sendRequestWithPosition(request);
+   }
 }
 
 function writeMessage(data, personal) {
    let html = "<span class='message bubble'>\
-      <span class='username'>" + data.username + "</span> \
-      <span class='text'>" + data.msg + "</span></span>";
+      <div class='username'>" + data.username + "</div> \
+      <div class='text'>" + data.msg + "</span></div>";
    let $msg = $(html);
    if(personal) {
       $msg.addClass("personal");
@@ -70,8 +106,8 @@ function writePersonalMessage() {
       "type": 1,
       "data": {
          "msg": msg,
-         "deviceID": localuser,
-         "username": localuser
+         "deviceID": local_device_id,
+         "username": local_username
       }
    };
    // writeMessage(data, true);
