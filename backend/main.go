@@ -35,6 +35,7 @@ const (
 	TypeConnect = iota
 	TypeSend
 	TypeQuery
+	TypeRoom
 )
 
 const maxGroupSize = 3
@@ -72,6 +73,17 @@ type ClientRecord struct {
 	Lat     float64 `json:"lat"`
 	RoomID  int     `json:"roomID"`
 	LastMsg string  `json:"lastMsg"`
+}
+
+type RoomResponse struct {
+	Type    int          `json:"type"`
+	Records []RoomRecord `json:"records"`
+}
+
+type RoomRecord struct {
+	ID        int          `json:"name"`
+	Log       []string     `json:"chatlog"`
+	Locations [][2]float64 `json:"locations"`
 }
 
 type Client struct {
@@ -252,6 +264,8 @@ func handleMessage(w http.ResponseWriter, r *http.Request) {
 			client.handleSend(message)
 		} else if message.Type == TypeQuery {
 			client.handleQuery()
+		} else if message.Type == TypeRoom {
+			client.handleRoom()
 		}
 	}
 }
@@ -316,6 +330,28 @@ func (client *Client) handleQuery() {
 				LastMsg: client.LastMsg,
 			})
 		}
+	}
+
+	client.socket.WriteJSON(response)
+}
+
+func (client *Client) handleRoom() {
+	response := RoomResponse{Type: TypeRoom}
+
+	for i, room := range rooms {
+		record := RoomRecord{ID: i}
+
+		var log []string
+		for _, message := range room.messages {
+			log = append(log, fmt.Sprintf("%s: %s", message.Name, message.Text))
+		}
+		record.Log = log
+
+		for _, client := range room.members {
+			record.Locations = append(record.Locations, [2]float64{client.Lat, client.Lon})
+		}
+
+		response.Records = append(response.Records, record)
 	}
 
 	client.socket.WriteJSON(response)
